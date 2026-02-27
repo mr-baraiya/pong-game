@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game Leaderboard | Top Players Rankings</title>
+    <meta name="description" content="View the global Pong Arena leaderboard. See top players, high scores, and compete to become the best Pong player online." />
+    <meta name="robots" content="index, follow" />
+    <meta name="keywords" content="pong leaderboard, pong high scores, top pong players, pong rankings">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="canonical" href="https://pong-game.tech/leaderboard.html">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Kumar+One&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="src/css/styles.css">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="text-center mb-5">
+                    <a href="/" class="text-decoration-none">
+                        <img src="assets/logo.png" alt="Pong Arena Logo" style="height: 80px;">
+                        <h1 class="text-warning mt-3">Pong Arena Leaderboard</h1>
+                    </a>
+                    <p class="text-light lead">Compete with players worldwide to reach the top!</p>
+                </div>
+                
+                <div class="text-light">
+                    <div class="alert alert-warning" role="alert">
+                        <i data-lucide="info"></i>
+                        <strong>Live Leaderboard:</strong> Rankings update in real-time. 
+                        <a href="/" class="alert-link">Play now</a> to see your name here!
+                    </div>
+                    
+                    <h2 class="text-warning mb-4">How the Leaderboard Works</h2>
+                    <p>
+                        Your score is calculated based on multiple factors to ensure fair and competitive rankings:
+                    </p>
+                    <ul class="mb-4">
+                        <li><strong>Victory Points:</strong> Defeating opponents earns base points</li>
+                        <li><strong>Time Bonus:</strong> Quicker wins earn higher scores</li>
+                        <li><strong>Difficulty Multiplier:</strong> Harder AI opponents multiply your score</li>
+                        <li><strong>Rally Bonus:</strong> Longer rallies demonstrate skill and earn bonus points</li>
+                    </ul>
+                    
+                    <div class="card bg-dark border-warning mb-5">
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="h5 mb-0"><i data-lucide="trophy"></i> Top 10 Players</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="leaderboardContainer" class="text-center py-5">
+                                <div class="spinner-border text-warning" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-secondary">Loading leaderboard data...</p>
+                                <p class="small text-secondary">
+                                    The leaderboard is dynamically loaded from our game. 
+                                    <a href="/" class="text-warning">Visit the main page</a> to see live rankings and your current position.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-4">
+                            <div class="p-4 border border-warning rounded text-center">
+                                <div class="mb-3">
+                                    <i data-lucide="medal" style="width: 48px; height: 48px;" class="text-warning"></i>
+                                </div>
+                                <h3 class="h5 text-warning">Weekly Champions</h3>
+                                <p class="mb-0">Top players each week earn special recognition and bragging rights.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 border border-warning rounded text-center">
+                                <div class="mb-3">
+                                    <i data-lucide="trending-up" style="width: 48px; height: 48px;" class="text-warning"></i>
+                                </div>
+                                <h3 class="h5 text-warning">Real-Time Updates</h3>
+                                <p class="mb-0">Rankings update instantly as players complete games around the world.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 border border-warning rounded text-center">
+                                <div class="mb-3">
+                                    <i data-lucide="users" style="width: 48px; height: 48px;" class="text-warning"></i>
+                                </div>
+                                <h3 class="h5 text-warning">Fair Competition</h3>
+                                <p class="mb-0">Only your best score counts—play multiple times to improve your rank.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-warning mb-3">How to Climb the Leaderboard</h2>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <div class="p-3 bg-secondary rounded">
+                                <h4 class="h6 text-warning">1. Create an Account</h4>
+                                <p class="mb-0">Sign in with Google or GitHub to save your scores permanently and compete globally.</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-secondary rounded">
+                                <h4 class="h6 text-warning">2. Play on Higher Difficulties</h4>
+                                <p class="mb-0">Challenge yourself against harder AI opponents for score multipliers and better rankings.</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-secondary rounded">
+                                <h4 class="h6 text-warning">3. Win Quickly</h4>
+                                <p class="mb-0">Speed matters! Finishing games faster earns time bonuses and higher scores.</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-secondary rounded">
+                                <h4 class="h6 text-warning">4. Master Your Skills</h4>
+                                <p class="mb-0">Practice paddle control, ball prediction, and strategic shot placement to dominate.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-warning mb-3">Leaderboard Features</h2>
+                    <ul class="mb-4">
+                        <li><strong>Global Rankings:</strong> Compete with players from around the world</li>
+                        <li><strong>Unique Players Only:</strong> Each player name appears once with their highest score</li>
+                        <li><strong>Pagination:</strong> Browse through all rankings, 10 entries per page</li>
+                        <li><strong>Live Updates:</strong> See new scores appear in real-time as games finish</li>
+                        <li><strong>Personal Track Record:</strong> View your rank and compare with others</li>
+                    </ul>
+                    
+                    <div class="alert alert-info mb-5">
+                        <h4 class="alert-heading text-warning"><i data-lucide="lightbulb"></i> Pro Tip</h4>
+                        <p class="mb-0">
+                            To maximize your leaderboard score, play on the hardest difficulty you can consistently win. 
+                            A win on Hard difficulty earns significantly more points than multiple wins on Easy mode.
+                        </p>
+                    </div>
+                    
+                    <div class="text-center p-4 bg-secondary rounded">
+                        <h3 class="text-warning mb-3">Ready to Top the Leaderboard?</h3>
+                        <p>Start playing now and see how you rank against the world's best Pong players!</p>
+                        <a href="/" class="btn btn-warning btn-lg">
+                            <i data-lucide="play"></i> Play Pong Arena
+                        </a>
+                        <div class="mt-3">
+                            <a href="/about.html" class="text-warning text-decoration-none me-3">About</a>
+                            <a href="/how-to-play.html" class="text-warning text-decoration-none">How to Play</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
