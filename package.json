@@ -1,0 +1,43 @@
+{
+  "name": "battle-pong",
+  "version": "1.0.0",
+  "description": "An epic battle-themed Pong game inspired by Indian warfare with Firebase integration",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "serve": "python3 -m http.server 8080",
+    "build": "echo 'No build step needed for vanilla JS project'",
+    "deploy": "firebase deploy",
+    "firebase:init": "firebase init"
+  },
+  "keywords": [
+    "pong",
+    "game",
+    "javascript",
+    "firebase",
+    "bootstrap",
+    "responsive",
+    "indian-theme",
+    "web-game"
+  ],
+  "author": "mr-baraiya",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^12.9.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mr-baraiya/pong-game.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mr-baraiya/pong-game/issues"
+  },
+  "homepage": "https://github.com/mr-baraiya/pong-game#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

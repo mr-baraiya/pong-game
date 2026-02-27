@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuddha Pong - Indian War Themed Game</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts for Indian Theme -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Kumar+One&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="src/css/styles.css">
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <!-- Header -->
+        <header class="text-center py-3 border-bottom border-warning">
+            <div class="container">
+                <h1 class="display-4 fw-bold text-warning mb-0">
+                    <span class="sanskrit-title">BATTLE PONG</span>
+                    <small class="d-block fs-5 text-light">War of Paddles</small>
+                </h1>
+                <p class="text-light mb-0">Epic Yuddh Ka Khel</p>
+            </div>
+        </header>
+
+        <!-- Game Container -->
+        <div class="container-fluid px-0">
+            <div class="row g-0">
+                <!-- Game Controls (Left Sidebar) -->
+                <div class="col-lg-2 col-md-3 d-none d-md-block sidebar">
+                    <div class="p-3">
+                        <h5 class="text-warning border-bottom border-warning pb-2"><i data-lucide="settings"></i> Game Controls</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-light">Difficulty:</label>
+                            <select id="difficulty" class="form-select form-select-sm bg-dark text-warning border-warning">
+                                <option value="easy">Easy Mode</option>
+                                <option value="normal" selected>Normal Mode</option>
+                                <option value="hard">Hard Mode</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button id="startBtn" class="btn btn-warning w-100 fw-bold">
+                                <i data-lucide="play"></i> START GAME
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button id="pauseBtn" class="btn btn-outline-warning w-100">
+                                <i data-lucide="pause"></i> PAUSE
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button id="resetBtn" class="btn btn-danger w-100">
+                                <i data-lucide="refresh-cw"></i> RESET
+                            </button>
+                        </div>
+                        
+                        <div class="controls-info mt-4">
+                            <h6 class="text-warning"><i data-lucide="gamepad-2"></i> Player Controls:</h6>
+                            <small class="text-light d-block"><i data-lucide="move-up"></i> W/S - Left Player</small>
+                            <small class="text-light d-block"><i data-lucide="arrow-up"></i> Arrow Keys - Right Player</small>
+                            <small class="text-light d-block"><i data-lucide="space"></i> Space - Pause</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Game Area -->
+                <div class="col-lg-8 col-md-6 game-main">
+                    <div class="game-container position-relative">
+                        <!-- Score Board -->
+                        <div class="scoreboard position-absolute top-0 start-50 translate-middle-x">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="player-score text-center">
+                                    <div class="fs-6 text-warning fw-bold">PLAYER 1</div>
+                                    <div id="player1Score" class="score-display">0</div>
+                                </div>
+                                <div class="vs-divider"><i data-lucide="swords"></i></div>
+                                <div class="player-score text-center">
+                                    <div class="fs-6 text-warning fw-bold">PLAYER 2</div>
+                                    <div id="player2Score" class="score-display">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Game Canvas -->
+                        <canvas id="gameCanvas" class="border border-warning"></canvas>
+                        
+                        <!-- Game Status Overlay -->
+                        <div id="gameOverlay" class="game-overlay position-absolute top-50 start-50 translate-middle text-center">
+                            <div class="overlay-content">
+                                <h2 id="overlayTitle" class="text-warning mb-3">PRESS START TO BEGIN GAME</h2>
+                                <p id="overlayMessage" class="text-light mb-3">Get ready to play, gamers!</p>
+                                <button id="overlayBtn" class="btn btn-warning" style="display: none;"><i data-lucide="play"></i> CONTINUE GAME</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Panel (Right Sidebar) -->
+                <div class="col-lg-2 col-md-3 d-none d-md-block sidebar">
+                    <div class="p-3">
+                        <h5 class="text-warning border-bottom border-warning pb-2"><i data-lucide="bar-chart-3"></i> Game Stats</h5>
+                        
+                        <div class="stat-item mb-2">
+                            <small class="text-warning"><i data-lucide="clock"></i> Game Time:</small>
+                            <div id="gameTime" class="text-light fw-bold">00:00</div>
+                        </div>
+                        
+                        <div class="stat-item mb-2">
+                            <small class="text-warning"><i data-lucide="zap"></i> Ball Speed:</small>
+                            <div id="ballSpeed" class="text-light fw-bold">5</div>
+                        </div>
+                        
+                        <div class="stat-item mb-2">
+                            <small class="text-warning"><i data-lucide="repeat"></i> Rallies:</small>
+                            <div id="rallyCount" class="text-light fw-bold">0</div>
+                        </div>
+                        
+                        <div class="stat-item mb-3">
+                            <small class="text-warning"><i data-lucide="target"></i> Best Rally:</small>
+                            <div id="longestRally" class="text-light fw-bold">0</div>
+                        </div>
+                        
+                        <div class="battle-log">
+                            <h6 class="text-warning"><i data-lucide="scroll-text"></i> Game Log:</h6>
+                            <div id="battleLog" class="battle-log-content">
+                                <small class="text-light d-block">Game awaits...</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button id="highScoresBtn" class="btn btn-outline-warning w-100">
+                                <i data-lucide="trophy"></i> HIGH SCORES
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Controls -->
+        <div class="d-md-none mobile-controls fixed-bottom bg-dark border-top border-warning p-2">
+            <div class="row g-2">
+                <div class="col-4">
+                    <button id="mobileStartBtn" class="btn btn-warning btn-sm w-100"><i data-lucide="play"></i> START</button>
+                </div>
+                <div class="col-4">
+                    <button id="mobilePauseBtn" class="btn btn-outline-warning btn-sm w-100"><i data-lucide="pause"></i> PAUSE</button>
+                </div>
+                <div class="col-4">
+                    <button id="mobileResetBtn" class="btn btn-danger btn-sm w-100"><i data-lucide="refresh-cw"></i> RESET</button>
+                </div>
+            </div>
+            <div class="row g-1 mt-2">
+                <div class="col-6">
+                    <div class="btn-group w-100" role="group">
+                        <button id="leftUp" class="btn btn-outline-warning btn-sm"><i data-lucide="chevron-up"></i> P1</button>
+                        <button id="leftDown" class="btn btn-outline-warning btn-sm"><i data-lucide="chevron-down"></i> P1</button>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="btn-group w-100" role="group">
+                        <button id="rightUp" class="btn btn-outline-warning btn-sm"><i data-lucide="chevron-up"></i> P2</button>
+                        <button id="rightDown" class="btn btn-outline-warning btn-sm"><i data-lucide="chevron-down"></i> P2</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Game Script (as module for Firebase) -->
+    <script type="module" src="src/js/game.js"></script>
+    
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            
+            // Initialize high scores button
+            document.getElementById('highScoresBtn')?.addEventListener('click', function() {
+                if (window.game) {
+                    window.game.showHighScoresList();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

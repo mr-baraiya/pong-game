@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to all documents for high scores display
+    match /{document=**} {
+      allow read: if true;
+    }
+    
+    // Allow write access to scores collection with validation
+    match /scores/{scoreId} {
+      allow create: if request.auth == null 
+        && resource == null 
+        && isValidScore(request.resource.data);
+      
+      // Don't allow updates or deletes to maintain score integrity
+      allow update, delete: if false;
+    }
+    
+    // Validation function for score data
+    function isValidScore(data) {
+      return data.keys().hasAll(['playerName', 'score', 'gameTime', 'difficulty', 'timestamp', 'createdAt'])
+        && data.playerName is string
+        && data.playerName.size() <= 20
+        && data.score is number
+        && data.score >= 0
+        && data.score <= 100  // Reasonable max score
+        && data.gameTime is number
+        && data.gameTime >= 0
+        && data.gameTime <= 3600  // Max 1 hour game time
+        && data.difficulty in ['easy', 'normal', 'hard']
+        && data.timestamp is timestamp
+        && data.createdAt is string;
+    }
+  }
+}
