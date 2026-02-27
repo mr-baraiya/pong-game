@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yuddha Pong - Indian War Themed Game</title>
+    <meta name="description" content="Play the classic Pong game with an epic Indian war theme">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FFD700">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pong Arena">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,11 +31,44 @@
     <div class="container-fluid p-0">
         <!-- Header -->
         <header class="text-center py-2 border-bottom border-warning">
-            <div class="container">
-                <h1 class="fw-bold text-warning mb-0" style="font-size: 1.8rem;">
-                    <span class="sanskrit-title">BATTLE PONG</span>
-                    <small class="d-block text-light" style="font-size: 0.9rem;">War of Paddles - Epic Yuddh Ka Khel</small>
-                </h1>
+            <div class="container d-flex justify-content-between align-items-center">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center gap-3">
+                    <!-- Logo -->
+                    <img src="assets/logo.png" alt="Pong Arena Logo" class="game-logo">
+                    
+                    <!-- Title -->
+                    <div class="title-section">
+                        <h1 class="fw-bold text-warning mb-0">
+                            <span class="sanskrit-title">BATTLE PONG</span>
+                            <small class="d-block text-light game-subtitle">War of Paddles - Epic Yuddh Ka Khel</small>
+                        </h1>
+                    </div>
+                </div>
+                
+                <!-- User Profile Section -->
+                <div id="userProfileSection" class="user-profile-section">
+                    <!-- Login Button (shown when not logged in) -->
+                    <button id="loginBtn" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-2" 
+                            title="Sign in to save your scores">
+                        <i data-lucide="log-in"></i>
+                        <span class="d-none d-md-inline">Sign In</span>
+                    </button>
+                    
+                    <!-- User Info (shown when logged in) -->
+                    <div id="userInfo" class="user-info d-none">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-warning dropdown-toggle d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img id="userPhoto" src="" alt="User" class="user-photo rounded-circle" style="width: 24px; height: 24px; display: none;">
+                                <span id="userName" class="user-name"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end bg-dark border-warning" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item text-warning" href="#" id="viewProfileBtn"><i data-lucide="user"></i> Profile</a></li>
+                                <li><hr class="dropdown-divider border-warning"></li>
+                                <li><a class="dropdown-item text-warning" href="#" id="logoutBtn"><i data-lucide="log-out"></i> Sign Out</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 

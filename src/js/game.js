@@ -1,6 +1,20 @@
 // Yuddha Pong - Indian War Themed Pong Game
 // Import Firebase functions
-import { trackGameStart, trackGameEnd, trackScore, saveScore, getTopScores } from '../config/firebase.js';
+import { 
+    trackGameStart, 
+    trackGameEnd, 
+    trackScore, 
+    saveScore, 
+    getTopScores, 
+    signInWithGoogle, 
+    signInWithGithub,
+    signUpWithEmail,
+    signInWithEmail,
+    resetPassword,
+    signOutUser, 
+    onAuthStateChange, 
+    getCurrentUser 
+} from '../config/firebase.js';
 
 class YuddhaPong {
     constructor() {
@@ -38,6 +52,11 @@ class YuddhaPong {
         this.highScores = [];
         this.playerName = '';
         this.showingHighScores = false;
+        this.currentPage = 1;
+        this.scoresPerPage = 10;
+        
+        // User authentication
+        this.currentUser = null;
         
         // Controls
         this.keys = {
@@ -75,6 +94,7 @@ class YuddhaPong {
         this.setupCanvas();
         this.createGameObjects();
         this.setupEventListeners();
+        this.setupAuth();
         this.updatePlayerLabels();
         this.updateDisplay();
         this.loadHighScores();
@@ -96,14 +116,27 @@ class YuddhaPong {
         const maxWidth = wrapperRect.width - 20;
         const maxHeight = wrapperRect.height - 20;
         
-        // Maintain 4:3 aspect ratio
-        const aspectRatio = 4 / 3;
+        // Check if mobile view
+        const isMobile = window.innerWidth <= 768;
+        
+        // Use different aspect ratios for mobile vs desktop
+        // On mobile, use a taller aspect ratio for better use of vertical space
+        const aspectRatio = isMobile ? 3 / 4 : 4 / 3;
+        
         let width = maxWidth;
-        let height = width / aspectRatio;
+        let height = isMobile ? maxHeight : width / aspectRatio;
         
         if (height > maxHeight) {
             height = maxHeight;
             width = height * aspectRatio;
+        }
+        
+        // On mobile, ensure minimum dimensions
+        if (isMobile) {
+            if (height < 450) {
+                height = Math.min(450, maxHeight);
+                width = height * aspectRatio;
+            }
         }
         
         this.canvas.width = width;
@@ -201,6 +234,490 @@ class YuddhaPong {
         // Difficulty selector
         document.getElementById('difficulty').addEventListener('change', (e) => {
             this.setDifficulty(e.target.value);
+        });
+        
+        // High scores button
+        const highScoresBtn = document.getElementById('highScoresBtn');
+        if (highScoresBtn) {
+            highScoresBtn.addEventListener('click', () => this.showHighScoresList());
+        }
+    }
+    
+    setupAuth() {
+        // Set up authentication UI event listeners
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const viewProfileBtn = document.getElementById('viewProfileBtn');
+        
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => this.handleLogin());
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleLogout();
+            });
+        }
+        
+        if (viewProfileBtn) {
+            viewProfileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showUserProfile();
+            });
+        }
+        
+        // Listen for auth state changes
+        onAuthStateChange((user) => {
+            this.currentUser = user;
+            this.updateAuthUI(user);
+        });
+    }
+    
+    async handleLogin() {
+        this.showAuthModal();
+    }
+    
+    showAuthModal(mode = 'signin') {
+        const overlay = document.getElementById('gameOverlay');
+        const content = overlay.querySelector('.overlay-content');
+        
+        const signInForm = mode === 'signin' ? `
+            <h2 class="text-warning mb-3">🎮 Sign In</h2>
+            <p class="text-light mb-3">Sign in to save your high scores</p>
+            
+            <!-- Social Sign-In -->
+            <div class="d-grid gap-2 mb-3">
+                <button id="googleSignInBtn" class="btn btn-outline-warning">
+                    <i data-lucide="chrome"></i> Continue with Google
+                </button>
+                <button id="githubSignInBtn" class="btn btn-outline-warning">
+                    <i data-lucide="github"></i> Continue with GitHub
+                </button>
+            </div>
+            
+            <div class="text-center text-warning my-3">OR</div>
+            
+            <!-- Email Sign-In Form -->
+            <div class="mb-3">
+                <input type="email" id="emailInput" class="form-control bg-dark text-warning border-warning" 
+                       placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="passwordInput" class="form-control bg-dark text-warning border-warning" 
+                       placeholder="Password" required>
+            </div>
+            
+            <div class="d-grid gap-2 mb-3">
+                <button id="emailSignInBtn" class="btn btn-warning">Sign In</button>
+            </div>
+            
+            <div class="text-center">
+                <small class="text-light">
+                    <a href="#" id="forgotPasswordLink" class="text-warning">Forgot Password?</a>
+                </small>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-light">
+                    Don't have an account? 
+                    <a href="#" id="showSignUpLink" class="text-warning">Sign Up</a>
+                </small>
+            </div>
+            
+            <div class="text-center mt-3">
+                <button id="closeAuthModal" class="btn btn-sm btn-outline-warning">Continue as Guest</button>
+            </div>
+        ` : mode === 'signup' ? `
+            <h2 class="text-warning mb-3">🎮 Create Account</h2>
+            <p class="text-light mb-3">Join the Battle Pong arena!</p>
+            
+            <div class="mb-3">
+                <input type="text" id="displayNameInput" class="form-control bg-dark text-warning border-warning" 
+                       placeholder="Display Name" required>
+            </div>
+            <div class="mb-3">
+                <input type="email" id="emailInput" class="form-control bg-dark text-warning border-warning" 
+                       placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="passwordInput" class="form-control bg-dark text-warning border-warning" 
+                       placeholder="Password (min 6 characters)" required>
+            </div>
+            
+            <div class="d-grid gap-2 mb-3">
+                <button id="emailSignUpBtn" class="btn btn-warning">Create Account</button>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-light">
+                    Already have an account? 
+                    <a href="#" id="showSignInLink" class="text-warning">Sign In</a>
+                </small>
+            </div>
+            
+            <div class="text-center mt-3">
+                <button id="closeAuthModal" class="btn btn-sm btn-outline-warning">Continue as Guest</button>
+            </div>
+        ` : `
+            <h2 class="text-warning mb-3">🔑 Reset Password</h2>
+            <p class="text-light mb-3">Enter your email to receive a password reset link</p>
+            
+            <div class="mb-3">
+                <input type="email" id="resetEmailInput" class="form-control bg-dark text-warning border-warning" 
+                       placeholder="Email" required>
+            </div>
+            
+            <div class="d-grid gap-2 mb-3">
+                <button id="sendResetBtn" class="btn btn-warning">Send Reset Link</button>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-light">
+                    <a href="#" id="backToSignInLink" class="text-warning">Back to Sign In</a>
+                </small>
+            </div>
+        `;
+        
+        content.innerHTML = signInForm;
+        overlay.style.display = 'block';
+        
+        // Reinitialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        // Add event listeners based on mode
+        if (mode === 'signin') {
+            this.setupSignInListeners();
+        } else if (mode === 'signup') {
+            this.setupSignUpListeners();
+        } else if (mode === 'reset') {
+            this.setupResetPasswordListeners();
+        }
+        
+        // Close modal listener
+        const closeBtn = document.getElementById('closeAuthModal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.hideOverlay());
+        }
+    }
+    
+    setupSignInListeners() {
+        // Google Sign-In
+        const googleBtn = document.getElementById('googleSignInBtn');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', async () => {
+                try {
+                    const result = await signInWithGoogle();
+                    this.hideOverlay();
+                    this.addBattleLog(`Welcome, ${result.user.displayName}!`);
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        // GitHub Sign-In
+        const githubBtn = document.getElementById('githubSignInBtn');
+        if (githubBtn) {
+            githubBtn.addEventListener('click', async () => {
+                try {
+                    const result = await signInWithGithub();
+                    this.hideOverlay();
+                    this.addBattleLog(`Welcome, ${result.user.displayName || result.user.email}!`);
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        // Email Sign-In
+        const emailBtn = document.getElementById('emailSignInBtn');
+        if (emailBtn) {
+            emailBtn.addEventListener('click', async () => {
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                
+                if (!email || !password) {
+                    this.addBattleLog('Please enter email and password');
+                    return;
+                }
+                
+                try {
+                    const result = await signInWithEmail(email, password);
+                    this.hideOverlay();
+                    this.addBattleLog(`Welcome back, ${result.user.displayName || result.user.email}!`);
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        // Forgot Password Link
+        const forgotLink = document.getElementById('forgotPasswordLink');
+        if (forgotLink) {
+            forgotLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showAuthModal('reset');
+            });
+        }
+        
+        // Show Sign Up Link
+        const signUpLink = document.getElementById('showSignUpLink');
+        if (signUpLink) {
+            signUpLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showAuthModal('signup');
+            });
+        }
+    }
+    
+    setupSignUpListeners() {
+        const signUpBtn = document.getElementById('emailSignUpBtn');
+        if (signUpBtn) {
+            signUpBtn.addEventListener('click', async () => {
+                const displayName = document.getElementById('displayNameInput').value;
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                
+                if (!displayName || !email || !password) {
+                    this.addBattleLog('Please fill all fields');
+                    return;
+                }
+                
+                try {
+                    const result = await signUpWithEmail(email, password, displayName);
+                    this.hideOverlay();
+                    this.addBattleLog(`Welcome to Battle Pong, ${displayName}!`);
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        const signInLink = document.getElementById('showSignInLink');
+        if (signInLink) {
+            signInLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showAuthModal('signin');
+            });
+        }
+    }
+    
+    setupResetPasswordListeners() {
+        const resetBtn = document.getElementById('sendResetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', async () => {
+                const email = document.getElementById('resetEmailInput').value;
+                
+                if (!email) {
+                    this.addBattleLog('Please enter your email');
+                    return;
+                }
+                
+                try {
+                    await resetPassword(email);
+                    this.hideOverlay();
+                    this.showPasswordResetConfirmation(email);
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        const backLink = document.getElementById('backToSignInLink');
+        if (backLink) {
+            backLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showAuthModal('signin');
+            });
+        }
+    }
+    
+    showPasswordResetConfirmation(email) {
+        const overlay = document.getElementById('gameOverlay');
+        const content = overlay.querySelector('.overlay-content');
+        
+        content.innerHTML = `
+            <h2 class="text-warning mb-3">✅ Email Sent!</h2>
+            <p class="text-light mb-3">Password reset link has been sent to:</p>
+            <p class="text-warning mb-3">${email}</p>
+            <p class="text-light small mb-3">Please check your inbox and follow the instructions to reset your password.</p>
+            <button id="closeResetConfirmation" class="btn btn-warning">OK</button>
+        `;
+        
+        overlay.style.display = 'block';
+        
+        document.getElementById('closeResetConfirmation').addEventListener('click', () => {
+            this.hideOverlay();
+        });
+    }
+    
+    handleAuthError(error) {
+        // Log simplified message for expected configuration issues
+        if (error.code === 'auth/not-configured' || error.code === 'auth/cancelled') {
+            console.info('Auth issue:', error.message);
+        } else {
+            console.warn('Auth failed:', error.code || error.message);
+        }
+        
+        // Show user-friendly error message based on error type
+        if (error.code === 'auth/not-configured') {
+            this.showAuthConfigurationError();
+        } else if (error.code === 'auth/cancelled') {
+            this.addBattleLog('Sign-in cancelled');
+        } else if (error.code === 'auth/unauthorized-domain') {
+            this.showDomainAuthorizationError(error.domain || window.location.hostname);
+        } else if (error.code === 'auth/domain-error') {
+            this.showDomainAuthorizationError(window.location.hostname);
+        } else if (error.code === 'auth/email-exists') {
+            this.addBattleLog('Email already registered. Please sign in.');
+        } else if (error.code === 'auth/weak-password') {
+            this.addBattleLog('Password too weak. Use at least 6 characters.');
+        } else if (error.code === 'auth/wrong-password') {
+            this.addBattleLog('Incorrect password. Try again.');
+        } else if (error.code === 'auth/user-not-found') {
+            this.addBattleLog('No account found. Please sign up.');
+        } else if (error.code === 'auth/invalid-email') {
+            this.addBattleLog('Invalid email address.');
+        } else if (error.code === 'auth/account-exists') {
+            this.addBattleLog('Account exists with different provider.');
+        } else {
+            this.addBattleLog('Authentication failed. Please try again.');
+        }
+    }
+    
+    showAuthConfigurationError(customMessage) {
+        const overlay = document.getElementById('gameOverlay');
+        const content = overlay.querySelector('.overlay-content');
+        
+        const message = customMessage || 'Google Sign-In is not configured yet';
+        
+        content.innerHTML = `
+            <h2 class="text-warning mb-3">⚠️ Authentication Not Available</h2>
+            <p class="text-light mb-3">${message}</p>
+            <div class="text-start bg-dark p-3 rounded border border-warning mb-3">
+                <p class="text-warning mb-2"><strong>To enable Google Sign-In:</strong></p>
+                <ol class="text-light small">
+                    <li>Go to Firebase Console</li>
+                    <li>Select Authentication → Sign-in method</li>
+                    <li>Enable Google provider</li>
+                    <li>Add authorized domains</li>
+                </ol>
+            </div>
+            <p class="text-light small mb-3">You can still play the game and save scores with a custom name.</p>
+            <button id="closeAuthError" class="btn btn-warning">Continue Playing</button>
+        `;
+        
+        overlay.style.display = 'block';
+        
+        document.getElementById('closeAuthError').addEventListener('click', () => {
+            this.hideOverlay();
+        });
+    }
+    
+    showDomainAuthorizationError(domain) {
+        const overlay = document.getElementById('gameOverlay');
+        const content = overlay.querySelector('.overlay-content');
+        
+        content.innerHTML = `
+            <h2 class="text-warning mb-3">🔒 Domain Not Authorized</h2>
+            <p class="text-light mb-3">OAuth sign-in is not enabled for this domain.</p>
+            
+            <div class="text-start bg-dark p-3 rounded border border-warning mb-3">
+                <p class="text-warning mb-2"><strong>Current domain:</strong></p>
+                <code class="text-light d-block mb-3 p-2 bg-darker rounded" style="word-break: break-all;">${domain}</code>
+                
+                <p class="text-warning mb-2"><strong>To fix this:</strong></p>
+                <ol class="text-light small mb-0">
+                    <li>Open <a href="https://console.firebase.google.com" target="_blank" class="text-warning">Firebase Console</a></li>
+                    <li>Go to <strong>Authentication</strong> → <strong>Settings</strong></li>
+                    <li>Click <strong>Authorized domains</strong> tab</li>
+                    <li>Click <strong>Add domain</strong></li>
+                    <li>Enter: <code class="text-warning">${domain}</code></li>
+                    <li>Click <strong>Add</strong> and try again</li>
+                </ol>
+            </div>
+            
+            <div class="alert alert-info bg-dark border-warning p-2 mb-3">
+                <small class="text-light">
+                    <strong>Note:</strong> Email/Password sign-in still works! Only Google and GitHub require domain authorization.
+                </small>
+            </div>
+            
+            <button id="closeDomainError" class="btn btn-warning">Use Email Sign-In Instead</button>
+        `;
+        
+        overlay.style.display = 'block';
+        
+        document.getElementById('closeDomainError').addEventListener('click', () => {
+            this.hideOverlay();
+            // Show sign-in modal again
+            setTimeout(() => this.showAuthModal('signin'), 300);
+        });
+    }
+    
+    async handleLogout() {
+        try {
+            await signOutUser();
+            this.currentUser = null;
+            this.addBattleLog('Signed out successfully');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    }
+    
+    updateAuthUI(user) {
+        const loginBtn = document.getElementById('loginBtn');
+        const userInfo = document.getElementById('userInfo');
+        const userName = document.getElementById('userName');
+        const userPhoto = document.getElementById('userPhoto');
+        
+        if (user) {
+            // User is signed in
+            loginBtn.classList.add('d-none');
+            userInfo.classList.remove('d-none');
+            
+            if (userName) {
+                userName.textContent = user.displayName || 'User';
+            }
+            
+            if (userPhoto && user.photoURL) {
+                userPhoto.src = user.photoURL;
+                userPhoto.style.display = 'block';
+            }
+            
+            // Auto-fill player name if needed
+            this.playerName = user.displayName || '';
+        } else {
+            // User is signed out
+            loginBtn.classList.remove('d-none');
+            userInfo.classList.add('d-none');
+            this.playerName = '';
+        }
+    }
+    
+    showUserProfile() {
+        if (!this.currentUser) return;
+        
+        const overlay = document.getElementById('gameOverlay');
+        const content = overlay.querySelector('.overlay-content');
+        
+        content.innerHTML = `
+            <h2 class="text-warning mb-3">👤 User Profile</h2>
+            <div class="text-center mb-3">
+                ${this.currentUser.photoURL ? `<img src="${this.currentUser.photoURL}" alt="Profile" class="rounded-circle mb-2" style="width: 80px; height: 80px; border: 3px solid var(--war-gold);">` : ''}
+                <h4 class="text-light">${this.currentUser.displayName || 'User'}</h4>
+                <p class="text-warning">${this.currentUser.email || ''}</p>
+            </div>
+            <button id="closeProfile" class="btn btn-warning mt-3">Close</button>
+        `;
+        
+        overlay.style.display = 'block';
+        
+        document.getElementById('closeProfile').addEventListener('click', () => {
+            this.hideOverlay();
         });
     }
     
@@ -743,7 +1260,7 @@ class YuddhaPong {
     // Firebase Integration Methods
     async loadHighScores() {
         try {
-            this.highScores = await getTopScores(10);
+            this.highScores = await getTopScores(100); // Fetch more scores for pagination
             this.updateHighScoresDisplay();
         } catch (error) {
             console.log('Failed to load high scores:', error);
@@ -781,12 +1298,16 @@ class YuddhaPong {
         const overlay = document.getElementById('gameOverlay');
         const content = overlay.querySelector('.overlay-content');
         
+        // Get default name from logged-in user or empty
+        const defaultName = this.currentUser ? this.currentUser.displayName : '';
+        
         content.innerHTML = `
             <h2 class="text-warning mb-3">🏆 NEW HIGH SCORE! 🏆</h2>
             <p class="text-light mb-3">${winner} achieved a high score of ${score}!</p>
-            <div class="mb-3">
+            ${this.currentUser ? `<p class="text-warning mb-2">Saving as: ${defaultName}</p>` : ''}
+            <div class="mb-3 ${this.currentUser ? 'd-none' : ''}">
                 <input type="text" id="playerNameInput" class="form-control bg-dark text-warning border-warning" 
-                       placeholder="Enter your name" maxlength="20">
+                       placeholder="Enter your name" maxlength="20" value="${defaultName}">
             </div>
             <div class="d-flex gap-2 justify-content-center">
                 <button id="saveScoreBtn" class="btn btn-warning">Save Score</button>
@@ -800,10 +1321,17 @@ class YuddhaPong {
         const skipBtn = document.getElementById('skipScoreBtn');
         const nameInput = document.getElementById('playerNameInput');
         
-        nameInput.focus();
+        if (nameInput) {
+            nameInput.focus();
+        }
         
         const handleSave = async () => {
-            const playerName = nameInput.value.trim() || 'Anonymous';
+            let playerName;
+            if (this.currentUser) {
+                playerName = this.currentUser.displayName || 'Anonymous';
+            } else {
+                playerName = nameInput ? nameInput.value.trim() || 'Anonymous' : 'Anonymous';
+            }
             await this.saveHighScore(playerName, score, gameTime, this.difficulty);
             this.showHighScoresList();
         };
@@ -836,7 +1364,8 @@ class YuddhaPong {
         });
     }
     
-    showHighScoresList() {
+    showHighScoresList(page = 1) {
+        this.currentPage = page;
         const overlay = document.getElementById('gameOverlay');
         const content = overlay.querySelector('.overlay-content');
         
@@ -845,8 +1374,18 @@ class YuddhaPong {
         if (this.highScores.length === 0) {
             scoresHTML += '<p class="text-light">No high scores yet!</p>';
         } else {
+            // Calculate pagination
+            const totalPages = Math.ceil(this.highScores.length / this.scoresPerPage);
+            const startIndex = (this.currentPage - 1) * this.scoresPerPage;
+            const endIndex = Math.min(startIndex + this.scoresPerPage, this.highScores.length);
+            const paginatedScores = this.highScores.slice(startIndex, endIndex);
+            
+            // Display current page info
+            scoresHTML += `<p class="text-center text-warning mb-2">Page ${this.currentPage} of ${totalPages}</p>`;
+            
             scoresHTML += '<div class="high-scores-list text-start">';
-            this.highScores.forEach((score, index) => {
+            paginatedScores.forEach((score, index) => {
+                const globalIndex = startIndex + index;
                 const date = new Date(score.timestamp).toLocaleDateString();
                 const minutes = Math.floor(score.gameTime / 60);
                 const seconds = score.gameTime % 60;
@@ -855,7 +1394,7 @@ class YuddhaPong {
                 scoresHTML += `
                     <div class="score-entry mb-2 p-2 border border-warning rounded">
                         <div class="d-flex justify-content-between">
-                            <span class="text-warning fw-bold">#${index + 1} ${score.playerName}</span>
+                            <span class="text-warning fw-bold">#${globalIndex + 1} ${score.playerName}</span>
                             <span class="text-light">${score.score} pts</span>
                         </div>
                         <div class="d-flex justify-content-between">
@@ -866,6 +1405,30 @@ class YuddhaPong {
                 `;
             });
             scoresHTML += '</div>';
+            
+            // Add pagination controls if needed
+            if (totalPages > 1) {
+                scoresHTML += '<div class="pagination-controls d-flex justify-content-center align-items-center gap-2 mt-3 mb-2">';
+                
+                // Previous button
+                if (this.currentPage > 1) {
+                    scoresHTML += '<button id="prevPage" class="btn btn-sm btn-outline-warning"><i data-lucide="chevron-left"></i> Prev</button>';
+                } else {
+                    scoresHTML += '<button class="btn btn-sm btn-outline-warning" disabled><i data-lucide="chevron-left"></i> Prev</button>';
+                }
+                
+                // Page numbers
+                scoresHTML += `<span class="text-warning px-2">${this.currentPage} / ${totalPages}</span>`;
+                
+                // Next button
+                if (this.currentPage < totalPages) {
+                    scoresHTML += '<button id="nextPage" class="btn btn-sm btn-outline-warning">Next <i data-lucide="chevron-right"></i></button>';
+                } else {
+                    scoresHTML += '<button class="btn btn-sm btn-outline-warning" disabled>Next <i data-lucide="chevron-right"></i></button>';
+                }
+                
+                scoresHTML += '</div>';
+            }
         }
         
         scoresHTML += '<button id="closeHighScores" class="btn btn-warning mt-3">Continue</button>';
@@ -873,9 +1436,32 @@ class YuddhaPong {
         content.innerHTML = scoresHTML;
         overlay.style.display = 'block';
         
+        // Reinitialize Lucide icons for pagination buttons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        // Add event listeners
         document.getElementById('closeHighScores').addEventListener('click', () => {
+            this.currentPage = 1; // Reset to first page
             this.hideOverlay();
         });
+        
+        // Pagination button listeners
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                this.showHighScoresList(this.currentPage - 1);
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                this.showHighScoresList(this.currentPage + 1);
+            });
+        }
     }
     
     updateHighScoresDisplay() {
@@ -896,6 +1482,17 @@ class YuddhaPong {
 document.addEventListener('DOMContentLoaded', () => {
     const game = new YuddhaPong();
     window.game = game; // For debugging
+    
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('PWA: Service Worker registered successfully:', registration.scope);
+            })
+            .catch(error => {
+                console.log('PWA: Service Worker registration failed:', error);
+            });
+    }
 });
 
 // Handle page visibility for auto-pause

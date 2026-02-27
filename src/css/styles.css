@@ -61,10 +61,197 @@ header {
     align-items: center;
 }
 
+@media (max-width: 768px) {
+    header {
+        height: 60px;
+    }
+    
+    header .container {
+        padding: 0 10px;
+    }
+    
+    header h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    header h1 small {
+        font-size: 0.7rem !important;
+    }
+    
+    .game-logo {
+        height: 45px;
+    }
+    
+    .title-section {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .game-logo {
+        height: 40px;
+    }
+    
+    header {
+        height: 55px;
+    }
+}
+
+@media (min-width: 769px) {
+    .title-section h1 .sanskrit-title {
+        font-size: 1.8rem;
+    }
+}
+
 .sanskrit-title {
     font-family: 'Kumar One', cursive;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     color: var(--war-gold) !important;
+    font-size: 1.8rem;
+}
+
+.title-section h1 {
+    margin-bottom: 0;
+}
+
+.game-subtitle {
+    font-size: 0.9rem;
+}
+
+/* Game Logo */
+.game-logo {
+    height: 60px;
+    width: auto;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+    transition: transform 0.3s ease;
+}
+
+.game-logo:hover {
+    transform: scale(1.05);
+}
+
+/* User Profile Section */
+.user-profile-section {
+    position: relative;
+    min-width: 120px;
+}
+
+.user-info {
+    display: inline-block;
+}
+
+.user-photo {
+    border: 2px solid var(--war-gold);
+    object-fit: cover;
+}
+
+.user-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dropdown-menu {
+    background-color: var(--war-dark) !important;
+    border: 2px solid var(--war-saffron) !important;
+}
+
+.dropdown-item {
+    color: var(--war-gold) !important;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 153, 51, 0.2) !important;
+    color: var(--war-gold) !important;
+}
+
+.dropdown-item i {
+    margin-right: 8px;
+    width: 16px;
+}
+
+@media (max-width: 768px) {
+    .user-profile-section {
+        min-width: auto;
+    }
+    
+    .user-name {
+        max-width: 80px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Authentication Modal Styles */
+.overlay-content input[type="email"],
+.overlay-content input[type="password"],
+.overlay-content input[type="text"] {
+    background-color: var(--war-dark) !important;
+    color: var(--war-gold) !important;
+    border: 2px solid var(--war-saffron) !important;
+    padding: 0.6rem;
+    font-size: 0.95rem;
+}
+
+.overlay-content input:focus {
+    border-color: var(--war-gold) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 153, 51, 0.25) !important;
+    outline: none;
+}
+
+.overlay-content input::placeholder {
+    color: rgba(255, 215, 0, 0.5) !important;
+}
+
+.overlay-content a {
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.overlay-content a:hover {
+    color: var(--war-saffron) !important;
+    text-decoration: underline;
+}
+
+.overlay-content .btn-outline-warning {
+    border-width: 2px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.overlay-content .btn-outline-warning i {
+    width: 20px;
+    height: 20px;
+}
+
+.overlay-content code {
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.overlay-content .bg-darker {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.overlay-content .alert {
+    border-radius: 8px;
+}
+
+.overlay-content ol {
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+}
+
+.overlay-content ol li {
+    margin-bottom: 0.5rem;
 }
 
 /* Sidebar Styling */
@@ -77,6 +264,13 @@ header {
     max-height: calc(100vh - 70px);
     word-wrap: break-word;
     overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+    }
 }
 
 .sidebar h5, .sidebar h6 {
@@ -325,25 +519,41 @@ header {
 /* Responsive Design */
 @media (max-width: 768px) {
     .game-main {
-        padding: 10px;
-        min-height: calc(100vh - 200px);
+        padding: 5px;
+        height: calc(100vh - 60px - 130px);
+        min-height: calc(100vh - 60px - 130px);
     }
     
     .scoreboard {
-        padding: 10px 20px;
-        margin-top: 5px;
+        padding: 8px 15px;
+        margin-top: 0px;
     }
     
     .score-display {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
     
     .game-container {
-        padding: 10px;
+        padding: 8px;
+        gap: 5px;
+    }
+    
+    .canvas-wrapper {
+        min-height: 400px;
     }
     
     .overlay-content h2 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+    }
+    
+    /* Auth modal on tablet */
+    .overlay-content input {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    
+    .overlay-content .btn {
+        font-size: 0.9rem;
     }
 }
 
@@ -353,16 +563,49 @@ header {
     }
     
     .score-display {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
     
     .game-container {
         padding: 5px;
-        margin: 5px;
+        margin: 3px;
+        gap: 3px;
     }
     
     .scoreboard {
-        padding: 8px 15px;
+        padding: 6px 12px;
+    }
+    
+    .canvas-wrapper {
+        min-height: 450px;
+    }
+    
+    .overlay-content h2 {
+        font-size: 1.1rem;
+    }
+    
+    .overlay-content p {
+        font-size: 0.8rem;
+    }
+    
+    .game-overlay {
+        max-width: 90%;
+        padding: 10px 15px;
+    }
+    
+    /* Auth modal on mobile */
+    .overlay-content input {
+        font-size: 0.85rem;
+        padding: 0.45rem;
+    }
+    
+    .overlay-content .btn {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+    
+    .overlay-content h2 {
+        font-size: 1.2rem;
     }
 }
 
@@ -446,8 +689,9 @@ select:focus {
 
 /* High Scores Styling */
 .high-scores-list {
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
+    min-height: 200px;
 }
 
 .score-entry {
@@ -473,6 +717,28 @@ select:focus {
     border-radius: 3px;
 }
 
+/* Pagination Controls */
+.pagination-controls {
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.pagination-controls .btn-sm {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.75rem;
+}
+
+.pagination-controls .btn-outline-warning:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-controls span {
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+}
+
 /* Player name input styling */
 #playerNameInput {
     background-color: var(--war-dark) !important;
@@ -493,7 +759,27 @@ select:focus {
     }
     
     .game-main {
-        padding: 10px;
+        padding: 5px;
+        height: calc(100vh - 60px - 120px);
+    }
+    
+    header {
+        height: 60px;
+    }
+    
+    /* Pagination on mobile */
+    .pagination-controls {
+        gap: 0.5rem !important;
+    }
+    
+    .pagination-controls .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+    
+    .pagination-controls span {
+        font-size: 0.85rem;
+        min-width: 50px;
     }
 }
 
