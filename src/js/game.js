@@ -75,6 +75,7 @@ class YuddhaPong {
         this.setupCanvas();
         this.createGameObjects();
         this.setupEventListeners();
+        this.updatePlayerLabels();
         this.updateDisplay();
         this.loadHighScores();
         this.gameLoop();
@@ -278,7 +279,36 @@ class YuddhaPong {
         if (this.rightPaddle) {
             this.rightPaddle.ai = (mode === 'ai');
         }
+        this.updatePlayerLabels();
         this.addBattleLog(`Game mode: ${mode === 'ai' ? '1 Player vs AI' : '2 Players'}`);
+    }
+    
+    updatePlayerLabels() {
+        const player2Label = document.getElementById('player2Label');
+        if (player2Label) {
+            player2Label.textContent = this.gameMode === 'ai' ? 'AI' : 'PLAYER 2';
+        }
+        
+        // Update mobile controls visibility
+        const mobileP1Controls = document.getElementById('mobileP1Controls');
+        const mobileP2Controls = document.getElementById('mobileP2Controls');
+        
+        if (this.gameMode === 'ai') {
+            // In AI mode, P1 controls take full width, hide P2 controls
+            if (mobileP1Controls) mobileP1Controls.className = 'col-12';
+            if (mobileP2Controls) mobileP2Controls.style.display = 'none';
+        } else {
+            // In 2-player mode, show both controls side by side
+            if (mobileP1Controls) mobileP1Controls.className = 'col-6';
+            if (mobileP2Controls) {
+                mobileP2Controls.style.display = '';
+                mobileP2Controls.className = 'col-6';
+            }
+        }
+    }
+    
+    getPlayer2Name() {
+        return this.gameMode === 'ai' ? 'AI' : 'Player 2';
     }
     
     setDifficulty(level) {
@@ -334,7 +364,7 @@ class YuddhaPong {
         if (this.gameRunning) {
             this.gamePaused = !this.gamePaused;
             if (this.gamePaused) {
-                this.showOverlay("GAME PAUSED", "Take a moment to strategize...", false);
+                this.showOverlay("GAME PAUSED", "Take a moment to strategize...", true, "RESUME");
             } else {
                 this.hideOverlay();
             }
@@ -451,7 +481,7 @@ class YuddhaPong {
         // Score detection
         if (this.ball.x < 0) {
             this.scores.player2++;
-            this.addBattleLog(`Player 2 scores! Total: ${this.scores.player2}`);
+            this.addBattleLog(`${this.getPlayer2Name()} scores! Total: ${this.scores.player2}`);
             
             // Track score in Firebase Analytics
             try {
@@ -537,7 +567,7 @@ class YuddhaPong {
     checkGameEnd() {
         const winScore = 7;
         if (this.scores.player1 >= winScore || this.scores.player2 >= winScore) {
-            const winner = this.scores.player1 >= winScore ? "PLAYER 1" : "PLAYER 2";
+            const winner = this.scores.player1 >= winScore ? "PLAYER 1" : (this.gameMode === 'ai' ? "AI" : "PLAYER 2");
             const winnerScore = this.scores.player1 >= winScore ? this.scores.player1 : this.scores.player2;
             const gameTime = this.stats.gameTime;
             
