@@ -1,10 +1,14 @@
 // Service Worker for Pong Arena PWA
-const CACHE_NAME = 'pong-arena-v1';
+const CACHE_NAME = 'pong-arena-v2';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/sitemap.xml',
+  '/robots.txt',
   '/src/css/styles.css',
   '/src/js/game.js',
+  '/src/js/audio.js',
   '/src/config/firebase.js',
   '/src/config/environment.js',
   '/assets/logo.png'

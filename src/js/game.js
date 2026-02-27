@@ -16,6 +16,9 @@ import {
     getCurrentUser 
 } from '../config/firebase.js';
 
+// Import Audio Manager
+import { AudioManager } from './audio.js';
+
 class YuddhaPong {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
@@ -58,6 +61,9 @@ class YuddhaPong {
         // User authentication
         this.currentUser = null;
         
+        // Audio Manager
+        this.audioManager = new AudioManager();
+        
         // Controls
         this.keys = {
             w: false, s: false,
@@ -98,6 +104,7 @@ class YuddhaPong {
         this.updatePlayerLabels();
         this.updateDisplay();
         this.loadHighScores();
+        this.updateAudioButton();
         this.gameLoop();
     }
     
@@ -208,6 +215,7 @@ class YuddhaPong {
         document.getElementById('startBtn').addEventListener('click', () => this.startGame());
         document.getElementById('pauseBtn').addEventListener('click', () => this.pauseGame());
         document.getElementById('resetBtn').addEventListener('click', () => this.resetGame());
+        document.getElementById('audioBtn').addEventListener('click', () => this.toggleAudio());
         document.getElementById('overlayBtn').addEventListener('click', () => {
             // If game is not started or not running, reset the game
             // Otherwise, continue (unpause)
@@ -222,6 +230,7 @@ class YuddhaPong {
         document.getElementById('mobileStartBtn').addEventListener('click', () => this.startGame());
         document.getElementById('mobilePauseBtn').addEventListener('click', () => this.pauseGame());
         document.getElementById('mobileResetBtn').addEventListener('click', () => this.resetGame());
+        document.getElementById('mobileAudioBtn').addEventListener('click', () => this.toggleAudio());
         
         // Mobile paddle controls
         this.setupMobileControls();
@@ -855,10 +864,19 @@ class YuddhaPong {
     }
     
     startGame() {
+        // Initialize audio on first user interaction
+        if (!this.audioManager.initialized) {
+            this.audioManager.init();
+        }
+        
         if (!this.gameStarted) {
             this.gameStarted = true;
             this.stats.startTime = Date.now();
             this.addBattleLog("Game started! Players ready!");
+            
+            // Play game start sound and music
+            this.audioManager.playGameStart();
+            this.audioManager.startMusic();
             
             // Track game start in Firebase Analytics
             try {
@@ -901,6 +919,9 @@ class YuddhaPong {
             startTime: null
         };
         
+        // Stop music when resetting
+        this.audioManager.stopMusic();
+        
         this.createGameObjects();
         this.updateDisplay();
         this.clearBattleLog();
@@ -912,6 +933,38 @@ class YuddhaPong {
         this.gameRunning = true;
         this.gamePaused = false;
         this.hideOverlay();
+    }
+    
+    toggleAudio() {
+        const isEnabled = this.audioManager.toggleAudio();
+        this.updateAudioButton();
+    }
+    
+    updateAudioButton() {
+        const isEnabled = this.audioManager.isEnabled();
+        const audioBtn = document.getElementById('audioBtn');
+        const mobileAudioBtn = document.getElementById('mobileAudioBtn');
+        
+        if (isEnabled) {
+            audioBtn.innerHTML = '<i data-lucide="volume-2" id="audioIcon"></i> AUDIO ON';
+            mobileAudioBtn.innerHTML = '<i data-lucide="volume-2" id="mobileAudioIcon"></i> AUDIO';
+            audioBtn.classList.remove('btn-outline-secondary');
+            audioBtn.classList.add('btn-outline-warning');
+            mobileAudioBtn.classList.remove('btn-outline-secondary');
+            mobileAudioBtn.classList.add('btn-outline-warning');
+        } else {
+            audioBtn.innerHTML = '<i data-lucide="volume-x" id="audioIcon"></i> AUDIO OFF';
+            mobileAudioBtn.innerHTML = '<i data-lucide="volume-x" id="mobileAudioIcon"></i> AUDIO';
+            audioBtn.classList.remove('btn-outline-warning');
+            audioBtn.classList.add('btn-outline-secondary');
+            mobileAudioBtn.classList.remove('btn-outline-warning');
+            mobileAudioBtn.classList.add('btn-outline-secondary');
+        }
+        
+        // Refresh lucide icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
     }
     
     update() {
@@ -990,6 +1043,9 @@ class YuddhaPong {
         if (this.ball.y <= this.ball.size / 2 || this.ball.y >= this.canvas.height - this.ball.size / 2) {
             this.ball.speedY = -this.ball.speedY;
             this.ball.y = Math.max(this.ball.size / 2, Math.min(this.canvas.height - this.ball.size / 2, this.ball.y));
+            
+            // Play wall hit sound
+            this.audioManager.playWallHit();
         }
         
         // Paddle collision
@@ -999,6 +1055,9 @@ class YuddhaPong {
         if (this.ball.x < 0) {
             this.scores.player2++;
             this.addBattleLog(`${this.getPlayer2Name()} scores! Total: ${this.scores.player2}`);
+            
+            // Play score sound
+            this.audioManager.playScore(false);
             
             // Track score in Firebase Analytics
             try {
@@ -1012,6 +1071,9 @@ class YuddhaPong {
         } else if (this.ball.x > this.canvas.width) {
             this.scores.player1++;
             this.addBattleLog(`Player 1 scores! Total: ${this.scores.player1}`);
+            
+            // Play score sound
+            this.audioManager.playScore(true);
             
             // Track score in Firebase Analytics
             try {
@@ -1048,6 +1110,9 @@ class YuddhaPong {
     }
     
     handlePaddleCollision(paddle, isLeftPaddle) {
+        // Play paddle hit sound
+        this.audioManager.playPaddleHit();
+        
         // Calculate collision point
         const collisionPoint = (this.ball.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
         
@@ -1089,6 +1154,10 @@ class YuddhaPong {
             const gameTime = this.stats.gameTime;
             
             this.gameRunning = false;
+            
+            // Play game over sound and stop music
+            this.audioManager.playGameOver();
+            this.audioManager.stopMusic();
             
             // Track game end in Firebase Analytics
             try {

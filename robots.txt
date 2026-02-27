@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pong-game.tech/sitemap.xml
+
+# Allow all search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Disallow admin/config files
+Disallow: /firebase.json
+Disallow: /firestore.rules
+Disallow: /firestore.indexes.json
+Disallow: /.git/
+Disallow: /node_modules/
