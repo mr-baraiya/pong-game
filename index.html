@@ -20,13 +20,12 @@
 <body>
     <div class="container-fluid p-0">
         <!-- Header -->
-        <header class="text-center py-3 border-bottom border-warning">
+        <header class="text-center py-2 border-bottom border-warning">
             <div class="container">
-                <h1 class="display-4 fw-bold text-warning mb-0">
+                <h1 class="fw-bold text-warning mb-0" style="font-size: 1.8rem;">
                     <span class="sanskrit-title">BATTLE PONG</span>
-                    <small class="d-block fs-5 text-light">War of Paddles</small>
+                    <small class="d-block text-light" style="font-size: 0.9rem;">War of Paddles - Epic Yuddh Ka Khel</small>
                 </h1>
-                <p class="text-light mb-0">Epic Yuddh Ka Khel</p>
             </div>
         </header>
 
@@ -34,9 +33,17 @@
         <div class="container-fluid px-0">
             <div class="row g-0">
                 <!-- Game Controls (Left Sidebar) -->
-                <div class="col-lg-2 col-md-3 d-none d-md-block sidebar">
+                <div class="col-lg-2 col-md-3 col-12 sidebar">
                     <div class="p-3">
                         <h5 class="text-warning border-bottom border-warning pb-2"><i data-lucide="settings"></i> Game Controls</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-light">Game Mode:</label>
+                            <select id="gameMode" class="form-select form-select-sm bg-dark text-warning border-warning">
+                                <option value="ai" selected>1 Player (vs AI)</option>
+                                <option value="2player">2 Players</option>
+                            </select>
+                        </div>
                         
                         <div class="mb-3">
                             <label class="form-label text-light">Difficulty:</label>
@@ -67,19 +74,19 @@
                         
                         <div class="controls-info mt-4">
                             <h6 class="text-warning"><i data-lucide="gamepad-2"></i> Player Controls:</h6>
-                            <small class="text-light d-block"><i data-lucide="move-up"></i> W/S - Left Player</small>
-                            <small class="text-light d-block"><i data-lucide="arrow-up"></i> Arrow Keys - Right Player</small>
-                            <small class="text-light d-block"><i data-lucide="space"></i> Space - Pause</small>
+                            <small class="text-light d-block"><i data-lucide="move-up"></i> W/S or Arrows - Player 1</small>
+                            <small class="text-light d-block"><i data-lucide="arrow-up"></i> Arrows - Player 2 (2P mode)</small>
+                            <small class="text-light d-block"><i data-lucide="space"></i> Space - Start/Pause</small>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Main Game Area -->
-                <div class="col-lg-8 col-md-6 game-main">
-                    <div class="game-container position-relative">
+                <div class="col-lg-8 col-md-6 col-12 game-main">
+                    <div class="game-container">
                         <!-- Score Board -->
-                        <div class="scoreboard position-absolute top-0 start-50 translate-middle-x">
-                            <div class="d-flex align-items-center gap-4">
+                        <div class="scoreboard">
+                            <div class="d-flex align-items-center justify-content-center gap-3">
                                 <div class="player-score text-center">
                                     <div class="fs-6 text-warning fw-bold">PLAYER 1</div>
                                     <div id="player1Score" class="score-display">0</div>
@@ -92,22 +99,24 @@
                             </div>
                         </div>
                         
-                        <!-- Game Canvas -->
-                        <canvas id="gameCanvas" class="border border-warning"></canvas>
-                        
-                        <!-- Game Status Overlay -->
-                        <div id="gameOverlay" class="game-overlay position-absolute top-50 start-50 translate-middle text-center">
-                            <div class="overlay-content">
-                                <h2 id="overlayTitle" class="text-warning mb-3">PRESS START TO BEGIN GAME</h2>
-                                <p id="overlayMessage" class="text-light mb-3">Get ready to play, gamers!</p>
-                                <button id="overlayBtn" class="btn btn-warning" style="display: none;"><i data-lucide="play"></i> CONTINUE GAME</button>
+                        <!-- Game Canvas Area -->
+                        <div class="canvas-wrapper position-relative">
+                            <canvas id="gameCanvas" class="border border-warning"></canvas>
+                            
+                            <!-- Game Status Overlay -->
+                            <div id="gameOverlay" class="game-overlay position-absolute top-50 start-50 translate-middle text-center">
+                                <div class="overlay-content">
+                                    <h2 id="overlayTitle" class="text-warning mb-3">PRESS START TO BEGIN GAME</h2>
+                                    <p id="overlayMessage" class="text-light mb-3">Get ready to play, gamers!</p>
+                                    <button id="overlayBtn" class="btn btn-warning" style="display: none;"><i data-lucide="play"></i> CONTINUE GAME</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Stats Panel (Right Sidebar) -->
-                <div class="col-lg-2 col-md-3 d-none d-md-block sidebar">
+                <div class="col-lg-2 col-md-3 col-12 sidebar">
                     <div class="p-3">
                         <h5 class="text-warning border-bottom border-warning pb-2"><i data-lucide="bar-chart-3"></i> Game Stats</h5>
                         

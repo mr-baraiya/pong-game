@@ -18,6 +18,7 @@ class YuddhaPong {
         this.ball = null;
         
         // Game settings
+        this.gameMode = 'ai';
         this.difficulty = 'normal';
         this.paddleSpeed = 8;
         this.ballSpeed = 5;
@@ -86,12 +87,13 @@ class YuddhaPong {
     }
     
     resizeCanvas() {
-        const container = this.canvas.parentElement;
-        const containerRect = container.getBoundingClientRect();
+        const canvasWrapper = this.canvas.parentElement;
+        const container = canvasWrapper.parentElement;
+        const wrapperRect = canvasWrapper.getBoundingClientRect();
         
-        // Calculate dimensions based on container and screen size
-        const maxWidth = Math.min(containerRect.width - 40, window.innerWidth * 0.8);
-        const maxHeight = Math.min(window.innerHeight * 0.6, 500);
+        // Calculate dimensions based on available space in wrapper
+        const maxWidth = wrapperRect.width - 20;
+        const maxHeight = wrapperRect.height - 20;
         
         // Maintain 4:3 aspect ratio
         const aspectRatio = 4 / 3;
@@ -132,7 +134,7 @@ class YuddhaPong {
             height: paddleHeight,
             speed: this.paddleSpeed,
             color: '#FFD700',
-            ai: true
+            ai: this.gameMode === 'ai'
         };
         
         this.ball = {
@@ -172,7 +174,15 @@ class YuddhaPong {
         document.getElementById('startBtn').addEventListener('click', () => this.startGame());
         document.getElementById('pauseBtn').addEventListener('click', () => this.pauseGame());
         document.getElementById('resetBtn').addEventListener('click', () => this.resetGame());
-        document.getElementById('overlayBtn').addEventListener('click', () => this.continueGame());
+        document.getElementById('overlayBtn').addEventListener('click', () => {
+            // If game is not started or not running, reset the game
+            // Otherwise, continue (unpause)
+            if (!this.gameStarted || !this.gameRunning) {
+                this.resetGame();
+            } else {
+                this.continueGame();
+            }
+        });
         
         // Mobile controls
         document.getElementById('mobileStartBtn').addEventListener('click', () => this.startGame());
@@ -181,6 +191,11 @@ class YuddhaPong {
         
         // Mobile paddle controls
         this.setupMobileControls();
+        
+        // Game mode selector
+        document.getElementById('gameMode').addEventListener('change', (e) => {
+            this.setGameMode(e.target.value);
+        });
         
         // Difficulty selector
         document.getElementById('difficulty').addEventListener('change', (e) => {
@@ -235,7 +250,14 @@ class YuddhaPong {
                 e.preventDefault();
                 if (!this.keys.space) {
                     this.keys.space = true;
-                    this.pauseGame();
+                    // If game hasn't started yet, start it
+                    if (!this.gameStarted) {
+                        this.startGame();
+                    } 
+                    // If game is running, toggle pause
+                    else if (this.gameStarted) {
+                        this.pauseGame();
+                    }
                 }
                 break;
         }
@@ -249,6 +271,14 @@ class YuddhaPong {
             case 'ArrowDown': this.keys.down = false; break;
             case 'Space': this.keys.space = false; break;
         }
+    }
+    
+    setGameMode(mode) {
+        this.gameMode = mode;
+        if (this.rightPaddle) {
+            this.rightPaddle.ai = (mode === 'ai');
+        }
+        this.addBattleLog(`Game mode: ${mode === 'ai' ? '1 Player vs AI' : '2 Players'}`);
     }
     
     setDifficulty(level) {
@@ -347,11 +377,22 @@ class YuddhaPong {
     
     updatePaddles() {
         // Left paddle (Player 1)
-        if (this.keys.w || this.mobileControls.leftUp) {
-            this.leftPaddle.y -= this.leftPaddle.speed;
-        }
-        if (this.keys.s || this.mobileControls.leftDown) {
-            this.leftPaddle.y += this.leftPaddle.speed;
+        // In AI mode, allow both W/S and Arrow keys for player 1
+        if (this.rightPaddle.ai) {
+            if (this.keys.w || this.keys.up || this.mobileControls.leftUp) {
+                this.leftPaddle.y -= this.leftPaddle.speed;
+            }
+            if (this.keys.s || this.keys.down || this.mobileControls.leftDown) {
+                this.leftPaddle.y += this.leftPaddle.speed;
+            }
+        } else {
+            // In 2-player mode, only W/S for player 1
+            if (this.keys.w || this.mobileControls.leftUp) {
+                this.leftPaddle.y -= this.leftPaddle.speed;
+            }
+            if (this.keys.s || this.mobileControls.leftDown) {
+                this.leftPaddle.y += this.leftPaddle.speed;
+            }
         }
         
         // Right paddle (Player 2 or AI)
@@ -617,7 +658,7 @@ class YuddhaPong {
         document.getElementById('longestRally').textContent = this.stats.longestRally;
     }
     
-    showOverlay(title, message, showButton) {
+    showOverlay(title, message, showButton, buttonText = 'CONTINUE GAME') {
         const overlay = document.getElementById('gameOverlay');
         const titleEl = document.getElementById('overlayTitle');
         const messageEl = document.getElementById('overlayMessage');
@@ -626,7 +667,23 @@ class YuddhaPong {
         titleEl.textContent = title;
         messageEl.textContent = message;
         buttonEl.style.display = showButton ? 'block' : 'none';
+        
+        // Update button text if provided
+        if (showButton) {
+            const buttonTextContent = buttonEl.querySelector('i') ? ' ' + buttonText : buttonText;
+            buttonEl.innerHTML = `<i data-lucide="play"></i>${buttonTextContent}`;
+            // Reinitialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
         overlay.style.display = 'block';
+        
+        // Blur any focused button to prevent accidental space key activation
+        if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+            document.activeElement.blur();
+        }
     }
     
     hideOverlay() {
@@ -681,7 +738,7 @@ class YuddhaPong {
         if (isHighScore) {
             this.promptForPlayerName(winner, score, gameTime);
         } else {
-            this.showOverlay(`${winner} WINS THE GAME!`, `Victory achieved through skill! Score: ${score}`, true);
+            this.showOverlay(`${winner} WINS THE GAME!`, `Victory achieved through skill! Score: ${score}`, true, 'PLAY AGAIN');
         }
     }
     
@@ -722,7 +779,21 @@ class YuddhaPong {
         };
         
         const handleSkip = () => {
-            this.showOverlay(`${winner} WINS THE GAME!`, `Victory achieved through skill! Score: ${score}`, true);
+            // Restore original overlay content
+            content.innerHTML = `
+                <h2 id="overlayTitle" class="text-warning mb-3">${winner} WINS THE GAME!</h2>
+                <p id="overlayMessage" class="text-light mb-3">Victory achieved through skill! Final Score: ${score}</p>
+                <button id="overlayBtn" class="btn btn-warning" style="display: block;"><i data-lucide="play"></i> PLAY AGAIN</button>
+            `;
+            // Reinitialize Lucide icons for the new content
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            // Reattach event listener to the new button to reset the game
+            const newOverlayBtn = document.getElementById('overlayBtn');
+            if (newOverlayBtn) {
+                newOverlayBtn.addEventListener('click', () => this.resetGame());
+            }
         };
         
         saveBtn.addEventListener('click', handleSave);
