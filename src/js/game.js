@@ -116,33 +116,40 @@ class YuddhaPong {
     
     resizeCanvas() {
         const canvasWrapper = this.canvas.parentElement;
-        const container = canvasWrapper.parentElement;
         const wrapperRect = canvasWrapper.getBoundingClientRect();
         
         // Calculate dimensions based on available space in wrapper
-        const maxWidth = wrapperRect.width - 20;
-        const maxHeight = wrapperRect.height - 20;
+        const maxWidth = Math.floor(wrapperRect.width - 10);
+        const maxHeight = Math.floor(wrapperRect.height - 10);
         
         // Check if mobile view
         const isMobile = window.innerWidth <= 768;
         
         // Use different aspect ratios for mobile vs desktop
-        // On mobile, use a taller aspect ratio for better use of vertical space
-        const aspectRatio = isMobile ? 3 / 4 : 4 / 3;
+        // On mobile, use a more vertical aspect ratio for better use of vertical space
+        const aspectRatio = isMobile ? 0.65 : 1.33; // mobile: width/height ratio (narrower), desktop: 4/3
         
-        let width = maxWidth;
-        let height = isMobile ? maxHeight : width / aspectRatio;
+        let width, height;
         
-        if (height > maxHeight) {
-            height = maxHeight;
-            width = height * aspectRatio;
-        }
-        
-        // On mobile, ensure minimum dimensions
         if (isMobile) {
-            if (height < 450) {
-                height = Math.min(450, maxHeight);
-                width = height * aspectRatio;
+            // On mobile, prioritize using available height
+            height = maxHeight;
+            width = Math.floor(height * aspectRatio);
+            
+            // If width exceeds available space, scale down
+            if (width > maxWidth) {
+                width = maxWidth;
+                height = Math.floor(width / aspectRatio);
+            }
+        } else {
+            // On desktop, prioritize width
+            width = maxWidth;
+            height = Math.floor(width / aspectRatio);
+            
+            // If height exceeds available space, scale down
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = Math.floor(height * aspectRatio);
             }
         }
         
@@ -150,8 +157,10 @@ class YuddhaPong {
         this.canvas.height = height;
         
         // Update canvas style for responsiveness
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
         this.canvas.style.maxWidth = '100%';
-        this.canvas.style.height = 'auto';
+        this.canvas.style.maxHeight = '100%';
     }
     
     createGameObjects() {

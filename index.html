@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Play Pong Game Online Free | Pong Arena</title>
     <meta name="description" content="Play Pong Game Online for free. Enjoy classic arcade Pong with real-time leaderboard and offline support at Pong Arena." />
     <meta name="keywords" content="pong game online, play pong online, arcade pong game, classic pong game, pong game with leaderboard, install pong game as app" />
@@ -74,19 +74,6 @@
         <!-- Header -->
         <header class="text-center py-2 border-bottom border-warning">
             <div class="container d-flex justify-content-between align-items-center">
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center gap-3">
-                    <!-- Logo -->
-                    <img src="assets/logo.png" alt="Pong Arena Logo" class="game-logo">
-                    
-                    <!-- Title -->
-                    <div class="title-section">
-                        <h1 class="fw-bold text-warning mb-0">
-                            <span class="sanskrit-title">BATTLE PONG</span>
-                            <small class="d-block text-light game-subtitle">War of Paddles - Epic Yuddh Ka Khel</small>
-                        </h1>
-                    </div>
-                </div>
-                
                 <!-- User Profile Section -->
                 <div id="userProfileSection" class="user-profile-section">
                     <!-- Login Button (shown when not logged in) -->
@@ -110,6 +97,19 @@
                             </ul>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Title Section (Center) -->
+                <div class="title-section flex-grow-1 text-center">
+                    <h1 class="fw-bold text-warning mb-0">
+                        <span class="sanskrit-title">BATTLE PONG</span>
+                        <small class="d-block text-light game-subtitle">War of Paddles - Epic Yuddh Ka Khel</small>
+                    </h1>
+                </div>
+                
+                <!-- Logo (Right side) -->
+                <div class="logo-section">
+                    <img src="assets/logo.png" alt="Pong Arena Logo" class="game-logo">
                 </div>
             </div>
         </header>
@@ -250,19 +250,21 @@
         
         <!-- Mobile Controls -->
         <div class="d-md-none mobile-controls fixed-bottom bg-dark border-top border-warning p-2">
-            <div class="row g-2">
-                <div class="col-4">
-                    <button id="mobileStartBtn" class="btn btn-warning btn-sm w-100"><i data-lucide="play"></i> START</button>
+            <div class="row g-2 mb-2">
+                <div class="col-3">
+                    <button id="mobileStartBtn" class="btn btn-warning btn-sm w-100"><i data-lucide="play"></i> <span class="d-none d-sm-inline">START</span></button>
                 </div>
-                <div class="col-4">
-                    <button id="mobilePauseBtn" class="btn btn-outline-warning btn-sm w-100"><i data-lucide="pause"></i> PAUSE</button>
+                <div class="col-3">
+                    <button id="mobilePauseBtn" class="btn btn-outline-warning btn-sm w-100"><i data-lucide="pause"></i> <span class="d-none d-sm-inline">PAUSE</span></button>
                 </div>
-                <div class="col-4">
-                    <button id="mobileResetBtn" class="btn btn-danger btn-sm w-100"><i data-lucide="refresh-cw"></i> RESET</button>
-                    <button id="mobileAudioBtn" class="btn btn-outline-warning btn-sm w-100"><i data-lucide="volume-2" id="mobileAudioIcon"></i> AUDIO</button>
+                <div class="col-3">
+                    <button id="mobileResetBtn" class="btn btn-danger btn-sm w-100"><i data-lucide="refresh-cw"></i> <span class="d-none d-sm-inline">RESET</span></button>
+                </div>
+                <div class="col-3">
+                    <button id="mobileAudioBtn" class="btn btn-outline-warning btn-sm w-100"><i data-lucide="volume-2" id="mobileAudioIcon"></i> <span class="d-none d-sm-inline">AUDIO</span></button>
                 </div>
             </div>
-            <div class="row g-1 mt-2">
+            <div class="row g-1">
                 <div id="mobileP1Controls" class="col-6">
                     <div class="btn-group w-100" role="group">
                         <button id="leftUp" class="btn btn-outline-warning btn-sm"><i data-lucide="chevron-up"></i> P1</button>
