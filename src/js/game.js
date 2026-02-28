@@ -1156,7 +1156,7 @@ class YuddhaPong {
     }
     
     checkGameEnd() {
-        const winScore = 7;
+        const winScore = 1;
         if (this.scores.player1 >= winScore || this.scores.player2 >= winScore) {
             const winner = this.scores.player1 >= winScore ? "PLAYER 1" : (this.gameMode === 'ai' ? "AI" : "PLAYER 2");
             const winnerScore = this.scores.player1 >= winScore ? this.scores.player1 : this.scores.player2;

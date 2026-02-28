@@ -474,7 +474,19 @@ header .container {
     padding: 15px 20px;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
     z-index: 15;
-    max-width: 85%;
+    max-width: 95%;
+}
+
+@media (min-width: 768px) {
+    .game-overlay {
+        max-width: 700px;
+    }
+}
+
+@media (min-width: 992px) {
+    .game-overlay {
+        max-width: 800px;
+    }
 }
 
 .overlay-content h2 {
@@ -702,7 +714,7 @@ header .container {
     }
     
     .game-overlay {
-        max-width: 90%;
+        max-width: 95%;
         padding: 8px 12px;
     }
     
