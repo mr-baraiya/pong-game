@@ -1,10 +1,24 @@
 // Multiplayer functionality for Battle Pong
 // This module handles online multiplayer using Socket.io
 
-// Socket.io server URL - update this when you deploy to Render/Railway
-const SOCKET_SERVER_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : 'https://your-multiplayer-server.onrender.com'; // Update this after deployment
+// Socket.io server URL configuration
+// Priority: 1. Environment config, 2. Production URL, 3. Localhost
+const getServerURL = () => {
+    // Check if environment config exists
+    if (typeof window !== 'undefined' && window.MULTIPLAYER_CONFIG) {
+        return window.MULTIPLAYER_CONFIG.serverURL;
+    }
+    
+    // Auto-detect environment
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:3000';
+    }
+    
+    // Production server URL
+    return 'https://pong-game-mfy2.onrender.com';
+};
+
+const SOCKET_SERVER_URL = getServerURL();
 
 class MultiplayerManager {
     constructor(game) {
