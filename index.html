@@ -127,12 +127,15 @@
                             <select id="gameMode" class="form-select form-select-sm bg-dark text-warning border-warning">
                                 <option value="ai" selected>1 Player (vs AI)</option>
                                 <option value="2player">2 Players (Local)</option>
-                                <option value="online">Online Multiplayer</option>
+                                <option value="online">🔒 Online Multiplayer (Login Required)</option>
                             </select>
                         </div>
                         
                         <!-- Online Multiplayer Options (hidden by default) -->
                         <div id="onlineOptions" class="mb-3" style="display: none;">
+                            <div class="alert alert-info bg-dark border-warning p-2 mb-2">
+                                <small class="text-warning"><i data-lucide="lock"></i> <strong>Login Required:</strong> Sign in to play online multiplayer</small>
+                            </div>
                             <div class="card bg-dark border-warning">
                                 <div class="card-body p-2">
                                     <button id="quickMatchBtn" class="btn btn-sm btn-warning w-100 mb-2">

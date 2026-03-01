@@ -271,6 +271,11 @@ class YuddhaPong {
         const quickMatchBtn = document.getElementById('quickMatchBtn');
         if (quickMatchBtn) {
             quickMatchBtn.addEventListener('click', () => {
+                if (!this.currentUser) {
+                    this.showAuthModal('signin');
+                    this.addBattleLog('⚠️ Please login to play online multiplayer');
+                    return;
+                }
                 if (this.multiplayerManager) {
                     this.multiplayerManager.quickMatch();
                 }
@@ -281,6 +286,11 @@ class YuddhaPong {
         const createRoomBtn = document.getElementById('createRoomBtn');
         if (createRoomBtn) {
             createRoomBtn.addEventListener('click', () => {
+                if (!this.currentUser) {
+                    this.showAuthModal('signin');
+                    this.addBattleLog('⚠️ Please login to play online multiplayer');
+                    return;
+                }
                 if (this.multiplayerManager) {
                     this.multiplayerManager.createPrivateRoom();
                 }
@@ -293,6 +303,11 @@ class YuddhaPong {
         
         if (joinRoomBtn && roomIdInput) {
             joinRoomBtn.addEventListener('click', () => {
+                if (!this.currentUser) {
+                    this.showAuthModal('signin');
+                    this.addBattleLog('⚠️ Please login to play online multiplayer');
+                    return;
+                }
                 const roomId = roomIdInput.value.trim().toUpperCase();
                 if (this.multiplayerManager && roomId) {
                     this.multiplayerManager.joinRoom(roomId);
@@ -302,6 +317,11 @@ class YuddhaPong {
             // Allow Enter key to join
             roomIdInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
+                    if (!this.currentUser) {
+                        this.showAuthModal('signin');
+                        this.addBattleLog('⚠️ Please login to play online multiplayer');
+                        return;
+                    }
                     const roomId = roomIdInput.value.trim().toUpperCase();
                     if (this.multiplayerManager && roomId) {
                         this.multiplayerManager.joinRoom(roomId);
@@ -356,7 +376,7 @@ class YuddhaPong {
         const content = overlay.querySelector('.overlay-content');
         
         const signInForm = mode === 'signin' ? `
-            <h2 class="text-warning mb-3">🎮 Sign In</h2>
+            <h2 class="text-warning mb-3">🔑 Sign In</h2>
             <p class="text-light mb-3">Sign in to save your high scores</p>
             
             <!-- Social Sign-In -->
@@ -635,6 +655,33 @@ class YuddhaPong {
             console.warn('Auth failed:', error.code || error.message);
         }
         
+        // Add visual feedback to form fields for credential errors
+        if (error.code === 'auth/invalid-credential' || 
+            error.code === 'auth/wrong-password' || 
+            error.code === 'auth/user-not-found' ||
+            error.code === 'auth/invalid-email') {
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('passwordInput');
+            
+            if (emailInput) {
+                emailInput.classList.add('is-invalid');
+                emailInput.style.borderColor = '#dc3545';
+                setTimeout(() => {
+                    emailInput.classList.remove('is-invalid');
+                    emailInput.style.borderColor = '';
+                }, 3000);
+            }
+            if (passwordInput) {
+                passwordInput.classList.add('is-invalid');
+                passwordInput.style.borderColor = '#dc3545';
+                passwordInput.value = ''; // Clear password on error
+                setTimeout(() => {
+                    passwordInput.classList.remove('is-invalid');
+                    passwordInput.style.borderColor = '';
+                }, 3000);
+            }
+        }
+        
         // Show user-friendly error message based on error type
         if (error.code === 'auth/not-configured') {
             this.showAuthConfigurationError();
@@ -644,6 +691,8 @@ class YuddhaPong {
             this.showDomainAuthorizationError(error.domain || window.location.hostname);
         } else if (error.code === 'auth/domain-error') {
             this.showDomainAuthorizationError(window.location.hostname);
+        } else if (error.code === 'auth/invalid-credential') {
+            this.addBattleLog('⚠️ Invalid email or password. Please check and try again.');
         } else if (error.code === 'auth/email-exists') {
             this.addBattleLog('Email already registered. Please sign in.');
         } else if (error.code === 'auth/weak-password') {
@@ -865,6 +914,18 @@ class YuddhaPong {
     }
     
     setGameMode(mode) {
+        // Check authentication for online mode
+        if (mode === 'online' && !this.currentUser) {
+            this.showAuthModal('signin');
+            this.addBattleLog('⚠️ Please login to play online multiplayer');
+            // Reset to AI mode
+            const gameModeSelect = document.getElementById('gameMode');
+            if (gameModeSelect) {
+                gameModeSelect.value = 'ai';
+            }
+            return;
+        }
+        
         this.gameMode = mode;
         this.isOnlineMode = (mode === 'online');
         
@@ -1280,7 +1341,7 @@ class YuddhaPong {
     }
     
     checkGameEnd() {
-        const winScore = 1;
+        const winScore = 10;
         if (this.scores.player1 >= winScore || this.scores.player2 >= winScore) {
             const winner = this.scores.player1 >= winScore ? "PLAYER 1" : (this.gameMode === 'ai' ? "AI" : "PLAYER 2");
             const winnerScore = this.scores.player1 >= winScore ? this.scores.player1 : this.scores.player2;

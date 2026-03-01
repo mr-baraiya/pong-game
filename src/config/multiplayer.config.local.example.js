@@ -15,4 +15,4 @@ window.MULTIPLAYER_CONFIG = {
     timeout: 10000
 };
 
-console.log('🔧 Local config override active:', window.MULTIPLAYER_CONFIG.serverURL);
+console.log('Local config override active:', window.MULTIPLAYER_CONFIG.serverURL);

@@ -28,7 +28,7 @@ const PADDLE_SPEED = 8;
 const INITIAL_BALL_SPEED = 5;
 const MAX_BALL_SPEED = 15;
 const FPS = 60;
-const WINNING_SCORE = 7;
+const WINNING_SCORE = 10;
 
 // Store active game rooms
 const gameRooms = new Map();

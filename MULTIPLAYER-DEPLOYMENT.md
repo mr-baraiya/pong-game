@@ -1,4 +1,4 @@
-# 🎮 Multiplayer Pong - Deployment Guide
+# Multiplayer Pong - Deployment Guide
 
 This guide explains how to deploy your Battle Pong game with real-time multiplayer on Firebase + External Server.
 
@@ -7,13 +7,13 @@ This guide explains how to deploy your Battle Pong game with real-time multiplay
 - **Frontend (Static)**: Firebase Hosting (HTML, CSS, JS)
 - **Backend (Node.js)**: Render/Railway/Glitch (Socket.io server)
 
-## 📦 What You Need
+## What You Need
 
 1. Firebase account (free)
 2. Render/Railway/Glitch account (free tier available)
 3. Node.js installed locally (for testing)
 
-## 🚀 Deployment Steps
+## Deployment Steps
 
 ### Step 1: Deploy Backend Server (Multiplayer)
 
@@ -93,7 +93,7 @@ python3 -m http.server 8080
 ```
 Then visit http://localhost:8080
 
-## 🎯 How to Play Multiplayer
+## How to Play Multiplayer
 
 1. Open your game (Firebase URL)
 2. Select **"Online Multiplayer"** from Game Mode
@@ -102,7 +102,7 @@ Then visit http://localhost:8080
    - **Create Private Room**: Get a 6-character room code to share
    - **Join Room**: Enter a friend's room code
 
-## 📝 Environment Variables (Optional)
+## Environment Variables (Optional)
 
 For the backend server, you can set:
 
@@ -111,7 +111,7 @@ For the backend server, you can set:
 
 On Render/Railway, these are typically auto-configured.
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Multiplayer not connecting:
 1. Check that backend server is running
@@ -129,7 +129,7 @@ firebase deploy --only hosting
 - Quick match requires 2 players searching simultaneously
 - Use Private Room instead to play with a specific friend
 
-## 📊 Features
+## Features
 
 ✅ Real-time multiplayer across different devices
 ✅ Room system with unique 6-character codes
@@ -139,13 +139,13 @@ firebase deploy --only hosting
 ✅ Reconnection support  
 ✅ Works alongside existing single-player modes
 
-## 🌐 URLs After Deployment
+## URLs After Deployment
 
 - **Frontend**: `https://your-project.web.app` (Firebase)
 - **Backend API**: `https://your-app.onrender.com` (Render)
 - **Health Check**: `https://your-app.onrender.com/health`
 
-## 💡 Tips
+## Tips
 
 - Free tier servers may sleep after inactivity - first connection might take 30-60 seconds
 - For better performance, upgrade to paid hosting tier

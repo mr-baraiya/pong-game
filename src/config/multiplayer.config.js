@@ -3,7 +3,9 @@
 
 window.MULTIPLAYER_CONFIG = {
     // Your deployed server URL
-    serverURL: 'https://pong-game-mfy2.onrender.com',
+    // serverURL: 'https://pong-game-mfy2.onrender.com',
+    // serverURL: 'https://glorious-memory-r4q4576vqqpxcp4x5-3000.app.github.dev',
+    serverURL: 'https://battle-pong-multiplayer-production.up.railway.app',
     
     // Optional: Connection settings
     reconnectionAttempts: 5,
@@ -11,4 +13,4 @@ window.MULTIPLAYER_CONFIG = {
     timeout: 10000
 };
 
-console.log('✅ Multiplayer server configured:', window.MULTIPLAYER_CONFIG.serverURL);
+console.log('Multiplayer server configured:', window.MULTIPLAYER_CONFIG.serverURL);

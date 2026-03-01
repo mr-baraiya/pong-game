@@ -1,6 +1,6 @@
-# 🎮 Online Multiplayer Feature - Quick Start
+# Online Multiplayer Feature - Quick Start
 
-## ✅ What Was Added
+## What Was Added
 
 I've successfully integrated **real-time online multiplayer** into your Battle Pong game! Here's what's new:
 
@@ -16,7 +16,7 @@ I've successfully integrated **real-time online multiplayer** into your Battle P
 3. **`package.json`** - Added backend dependencies
 4. **`firebase.json`** - Updated to exclude backend files
 
-## 🎯 How It Works
+## How It Works
 
 ### Architecture:
 ```
@@ -37,7 +37,7 @@ I've successfully integrated **real-time online multiplayer** into your Battle P
 - **Clients**: Send paddle movements only
 - **Real-time sync**: 60 FPS updates via WebSocket
 
-## 🚀 Testing Locally (Right Now!)
+## Testing Locally (Right Now!)
 
 ### Server is Already Running!
 The multiplayer server is running on port 3000.
@@ -61,7 +61,7 @@ The multiplayer server is running on port 3000.
    - Other joins with that code
    - Play together in real-time!
 
-## 📱 Features
+## Features
 
 ✅ **3 Game Modes**:
    - 1 Player (vs AI) - ← Your existing mode
@@ -83,7 +83,7 @@ The multiplayer server is running on port 3000.
    - Low latency paddle updates
    - Smooth gameplay
 
-## 🌐 Deployment
+## Deployment
 
 ### Firebase (Frontend) + Render/Railway (Backend)
 
@@ -131,13 +131,13 @@ Done! Your game is live with multiplayer!
 | Room codes | ❌ | ❌ | ✅ |
 | Anti-cheat | N/A | N/A | ✅ (server-side) |
 
-## 📊 Server Endpoints
+## Server Endpoints
 
 - **`GET /`** - Serves the game
 - **`GET /health`** - Health check (returns active rooms count)
 - **WebSocket** - Socket.io connections for real-time gameplay
 
-## 🔧 Commands
+## Commands
 
 ```bash
 # Install dependencies
@@ -153,7 +153,7 @@ npm run dev
 firebase deploy
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Cannot connect to multiplayer server"
 - ✅ Server is running (check terminal)
@@ -170,14 +170,14 @@ firebase deploy
 - Server might be overloaded (check logs)
 - Try refreshing page
 
-## 💡 Tips
+## Tips
 
 - **Free tier servers sleep**: First connection may take 30-60s
 - **Test locally first**: Use 2 browser windows
 - **Share room codes**: Use the copy button for easy sharing
 - **Monitor logs**: Check browser console and server logs
 
-## 🎉 What's Next?
+## What's Next?
 
 Your game now supports:
 - ✅ Single-player with AI

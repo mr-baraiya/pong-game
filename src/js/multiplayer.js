@@ -30,6 +30,7 @@ class MultiplayerManager {
         this.isMultiplayerMode = false;
         this.waitingForOpponent = false;
         this.opponentConnected = false;
+        this.persistentToast = null;
     }
 
     init() {
@@ -49,8 +50,10 @@ class MultiplayerManager {
             this.socket = io(SOCKET_SERVER_URL, {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
-                reconnectionAttempts: 5,
-                reconnectionDelay: 1000
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                timeout: 20000
             });
 
             this.setupSocketListeners();
@@ -62,8 +65,21 @@ class MultiplayerManager {
 
     setupSocketListeners() {
         this.socket.on('connect', () => {
-            console.log('Connected to multiplayer server');
+            console.log('✅ Connected to multiplayer server');
             this.connected = true;
+            this.hideError();
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.log('⏳ Server is starting up, please wait...');
+            this.showError('🔄 Connecting to server... (Server may be waking up, this can take 30-60 seconds)', false);
+        });
+
+        this.socket.on('reconnect_attempt', (attemptNumber) => {
+            console.log(`Reconnection attempt ${attemptNumber}`);
+            if (attemptNumber === 1) {
+                this.showError('🔄 Connecting to server... (First connection may take up to 60 seconds)', false);
+            }
         });
 
         this.socket.on('disconnect', () => {
@@ -102,7 +118,7 @@ class MultiplayerManager {
             this.hideWaitingScreen();
             this.updateStartButton('ready');
             this.game.addBattleLog('Opponent joined! Game starting...');
-            this.game.audioManager.playSound('rally');
+            this.game.audioManager.playGameStart();
             
             // Start the game
             if (!this.game.gameRunning) {
@@ -233,17 +249,39 @@ class MultiplayerManager {
         overlay.style.display = 'none';
     }
 
-    showError(message) {
+    showError(message, autoDismiss = true) {
         this.game.addBattleLog(`⚠️ ${message}`);
         
-        // Also show a toast notification if available
+        // Remove existing persistent error if any
+        this.hideError();
+        
+        // Create toast notification
         const toast = document.createElement('div');
-        toast.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3';
+        toast.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
         toast.style.zIndex = '9999';
         toast.textContent = message;
+        toast.id = 'multiplayer-error-toast';
         document.body.appendChild(toast);
         
-        setTimeout(() => toast.remove(), 3000);
+        if (autoDismiss) {
+            setTimeout(() => toast.remove(), 5000);
+        } else {
+            // Keep reference for manual dismissal
+            this.persistentToast = toast;
+        }
+    }
+
+    hideError() {
+        // Remove persistent toast if exists
+        if (this.persistentToast) {
+            this.persistentToast.remove();
+            this.persistentToast = null;
+        }
+        // Also remove by ID in case reference is lost
+        const existingToast = document.getElementById('multiplayer-error-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
     }
 
     leaveMultiplayer() {
