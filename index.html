@@ -126,8 +126,31 @@
                             <label class="form-label text-light">Game Mode:</label>
                             <select id="gameMode" class="form-select form-select-sm bg-dark text-warning border-warning">
                                 <option value="ai" selected>1 Player (vs AI)</option>
-                                <option value="2player">2 Players</option>
+                                <option value="2player">2 Players (Local)</option>
+                                <option value="online">Online Multiplayer</option>
                             </select>
+                        </div>
+                        
+                        <!-- Online Multiplayer Options (hidden by default) -->
+                        <div id="onlineOptions" class="mb-3" style="display: none;">
+                            <div class="card bg-dark border-warning">
+                                <div class="card-body p-2">
+                                    <button id="quickMatchBtn" class="btn btn-sm btn-warning w-100 mb-2">
+                                        <i data-lucide="zap"></i> Quick Match
+                                    </button>
+                                    <button id="createRoomBtn" class="btn btn-sm btn-outline-warning w-100 mb-2">
+                                        <i data-lucide="plus"></i> Create Private Room
+                                    </button>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" id="roomIdInput" class="form-control bg-dark text-warning border-warning" 
+                                               placeholder="Room ID" maxlength="6" style="text-transform: uppercase;">
+                                        <button id="joinRoomBtn" class="btn btn-success btn-sm">
+                                            <i data-lucide="log-in"></i> Join
+                                        </button>
+                                    </div>
+                                    <small class="text-light d-block mt-2">Enter 6-character room ID to join a friend</small>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -399,6 +422,12 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Socket.io Client (for multiplayer) -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    
+    <!-- Multiplayer Manager -->
+    <script src="src/js/multiplayer.js"></script>
     
     <!-- Game Script (as module for Firebase) -->
     <script type="module" src="src/js/game.js"></script>

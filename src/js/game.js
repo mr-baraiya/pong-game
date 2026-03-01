@@ -64,6 +64,10 @@ class YuddhaPong {
         // Audio Manager
         this.audioManager = new AudioManager();
         
+        // Multiplayer Manager
+        this.multiplayerManager = null; // Will be initialized when needed
+        this.isOnlineMode = false;
+        
         // Controls
         this.keys = {
             w: false, s: false,
@@ -100,6 +104,7 @@ class YuddhaPong {
         this.setupCanvas();
         this.createGameObjects();
         this.setupEventListeners();
+        this.setupMultiplayerListeners();
         this.setupAuth();
         this.updatePlayerLabels();
         this.updateDisplay();
@@ -258,6 +263,56 @@ class YuddhaPong {
         const highScoresBtn = document.getElementById('highScoresBtn');
         if (highScoresBtn) {
             highScoresBtn.addEventListener('click', () => this.showHighScoresList());
+        }
+    }
+    
+    setupMultiplayerListeners() {
+        // Quick match button
+        const quickMatchBtn = document.getElementById('quickMatchBtn');
+        if (quickMatchBtn) {
+            quickMatchBtn.addEventListener('click', () => {
+                if (this.multiplayerManager) {
+                    this.multiplayerManager.quickMatch();
+                }
+            });
+        }
+        
+        // Create private room button
+        const createRoomBtn = document.getElementById('createRoomBtn');
+        if (createRoomBtn) {
+            createRoomBtn.addEventListener('click', () => {
+                if (this.multiplayerManager) {
+                    this.multiplayerManager.createPrivateRoom();
+                }
+            });
+        }
+        
+        // Join room button
+        const joinRoomBtn = document.getElementById('joinRoomBtn');
+        const roomIdInput = document.getElementById('roomIdInput');
+        
+        if (joinRoomBtn && roomIdInput) {
+            joinRoomBtn.addEventListener('click', () => {
+                const roomId = roomIdInput.value.trim().toUpperCase();
+                if (this.multiplayerManager && roomId) {
+                    this.multiplayerManager.joinRoom(roomId);
+                }
+            });
+            
+            // Allow Enter key to join
+            roomIdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const roomId = roomIdInput.value.trim().toUpperCase();
+                    if (this.multiplayerManager && roomId) {
+                        this.multiplayerManager.joinRoom(roomId);
+                    }
+                }
+            });
+            
+            // Uppercase input automatically
+            roomIdInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase();
+            });
         }
     }
     
@@ -811,25 +866,75 @@ class YuddhaPong {
     
     setGameMode(mode) {
         this.gameMode = mode;
+        this.isOnlineMode = (mode === 'online');
+        
+        // Show/hide online options
+        const onlineOptions = document.getElementById('onlineOptions');
+        if (onlineOptions) {
+            onlineOptions.style.display = mode === 'online' ? 'block' : 'none';
+        }
+        
+        // Update start button text based on mode
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            if (mode === 'online') {
+                startBtn.innerHTML = '<i data-lucide="wifi"></i> WAITING FOR MATCH';
+                startBtn.disabled = true;
+                startBtn.classList.add('opacity-50');
+            } else {
+                startBtn.innerHTML = '<i data-lucide="play"></i> START GAME';
+                startBtn.disabled = false;
+                startBtn.classList.remove('opacity-50');
+            }
+            // Re-initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
         if (this.rightPaddle) {
             this.rightPaddle.ai = (mode === 'ai');
         }
+        
+        // Initialize multiplayer manager if online mode
+        if (mode === 'online' && !this.multiplayerManager) {
+            if (typeof MultiplayerManager !== 'undefined') {
+                this.multiplayerManager = new MultiplayerManager(this);
+                this.multiplayerManager.init();
+            } else {
+                this.addBattleLog('⚠️ Multiplayer not available');
+                this.setGameMode('ai'); // Fallback to AI
+                return;
+            }
+        }
+        
+        // Leave multiplayer if switching from online mode
+        if (mode !== 'online' && this.multiplayerManager?.isMultiplayerMode) {
+            this.multiplayerManager.leaveMultiplayer();
+        }
+        
         this.updatePlayerLabels();
-        this.addBattleLog(`Game mode: ${mode === 'ai' ? '1 Player vs AI' : '2 Players'}`);
+        const modeText = mode === 'ai' ? '1 Player vs AI' : 
+                        mode === 'online' ? 'Online Multiplayer' : 
+                        '2 Players Local';
+        this.addBattleLog(`Game mode: ${modeText}`);
     }
     
     updatePlayerLabels() {
         const player2Label = document.getElementById('player2Label');
         if (player2Label) {
-            player2Label.textContent = this.gameMode === 'ai' ? 'AI' : 'PLAYER 2';
+            const labelText = this.gameMode === 'ai' ? 'AI' : 
+                             this.gameMode === 'online' ? 'ONLINE' : 
+                             'PLAYER 2';
+            player2Label.textContent = labelText;
         }
         
         // Update mobile controls visibility
         const mobileP1Controls = document.getElementById('mobileP1Controls');
         const mobileP2Controls = document.getElementById('mobileP2Controls');
         
-        if (this.gameMode === 'ai') {
-            // In AI mode, P1 controls take full width, hide P2 controls
+        if (this.gameMode === 'ai' || this.gameMode === 'online') {
+            // In AI or Online mode, P1 controls take full width, hide P2 controls
             if (mobileP1Controls) mobileP1Controls.className = 'col-12';
             if (mobileP2Controls) mobileP2Controls.style.display = 'none';
         } else {
@@ -873,6 +978,18 @@ class YuddhaPong {
     }
     
     startGame() {
+        // In online multiplayer, don't manually start - wait for both players
+        if (this.isOnlineMode && this.multiplayerManager) {
+            if (!this.multiplayerManager.isMultiplayerMode) {
+                this.addBattleLog('⚠️ Please create/join a room first!');
+                return;
+            }
+            if (this.multiplayerManager.waitingForOpponent) {
+                this.addBattleLog('⏳ Waiting for opponent to join...');
+                return;
+            }
+        }
+        
         // Initialize audio on first user interaction
         if (!this.audioManager.initialized) {
             this.audioManager.init();
@@ -985,6 +1102,13 @@ class YuddhaPong {
     }
     
     updatePaddles() {
+        // In online multiplayer mode, sync paddle moves with server
+        if (this.multiplayerManager?.isMultiplayerMode) {
+            this.multiplayerManager.updateMyPaddle();
+            // Server handles ball and opponent paddle
+            return;
+        }
+        
         // Left paddle (Player 1)
         // In AI mode, allow both W/S and Arrow keys for player 1
         if (this.rightPaddle.ai) {
