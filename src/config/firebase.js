@@ -12,7 +12,9 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
-    updateProfile
+    updateProfile,
+    linkWithPopup,
+    fetchSignInMethodsForEmail
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 // Import Firebase configuration (kept in separate file for security)
@@ -327,6 +329,149 @@ export const signInWithGithub = async () => {
             const friendlyError = new Error('An account already exists with the same email address but different sign-in credentials.');
             friendlyError.code = 'auth/account-exists';
             throw friendlyError;
+        }
+        
+        throw error;
+    }
+};
+
+export const linkProvider = async (providerType) => {
+    if (!auth || !isFirebaseEnabled) {
+        console.log('Demo mode: Provider linking not available');
+        return;
+    }
+    
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error('No user signed in');
+    }
+    
+    try {
+        let provider;
+        switch (providerType) {
+            case 'google':
+                provider = new GoogleAuthProvider();
+                break;
+            case 'github':
+                provider = new GithubAuthProvider();
+                break;
+            default:
+                throw new Error('Unsupported provider type');
+        }
+        
+        const result = await linkWithPopup(user, provider);
+        console.log(`${providerType} account linked successfully`);
+        return result;
+        
+    } catch (error) {
+        console.warn('Provider linking error:', error.code || 'Unknown error');
+        
+        if (error.code === 'auth/provider-already-linked') {
+            const friendlyError = new Error('This account is already linked.');
+            friendlyError.code = 'auth/already-linked';
+            throw friendlyError;
+        } else if (error.code === 'auth/credential-already-in-use') {
+            const friendlyError = new Error('This account is already associated with another user.');
+            friendlyError.code = 'auth/already-used';
+            throw friendlyError;
+        }
+        
+        throw error;
+    }
+};
+
+export const getLinkedProviders = () => {
+    if (!auth || !isFirebaseEnabled) {
+        return [];
+    }
+    
+    const user = auth.currentUser;
+    if (!user) {
+        return [];
+    }
+    
+    return user.providerData.map(provider => provider.providerId);
+};
+
+export const smartSignUpWithEmail = async (email, password, displayName) => {
+    if (!auth || !isFirebaseEnabled) {
+        console.log('Demo mode: Smart email sign-up not available');
+        return {
+            user: {
+                uid: 'demo-user-email',
+                displayName: displayName || 'Demo User',
+                email: email,
+                photoURL: null
+            }
+        };
+    }
+    
+    try {
+        // First check if email already exists
+        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+        
+        if (signInMethods.length > 0) {
+            // Email exists, try to sign in instead
+            if (signInMethods.includes('password')) {
+                // Try signing in with the provided password
+                try {
+                    const result = await signInWithEmailAndPassword(auth, email, password);
+                    console.log('Existing user signed in:', result.user.email);
+                    return { result, wasExistingUser: true };
+                } catch (signInError) {
+                    if (signInError.code === 'auth/wrong-password') {
+                        // Wrong password, let user know account exists
+                        const friendlyError = new Error('An account with this email already exists. Please sign in or reset your password.');
+                        friendlyError.code = 'auth/existing-account';
+                        friendlyError.signInMethods = signInMethods;
+                        throw friendlyError;
+                    }
+                    throw signInError;
+                }
+            } else {
+                // Account exists with different provider
+                const providerNames = signInMethods.map(method => {
+                    if (method === 'google.com') return 'Google';
+                    if (method === 'github.com') return 'GitHub';
+                    return method;
+                });
+                
+                const friendlyError = new Error(`An account with this email already exists. Please sign in with: ${providerNames.join(', ')}`);
+                friendlyError.code = 'auth/existing-provider';
+                friendlyError.signInMethods = signInMethods;
+                throw friendlyError;
+            }
+        }
+        
+        // Email doesn't exist, create new account
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Update user profile with display name
+        if (displayName) {
+            await updateProfile(result.user, {
+                displayName: displayName
+            });
+        }
+        
+        console.log('New user created:', result.user.email);
+        return { result, wasExistingUser: false };
+        
+    } catch (error) {
+        console.warn('Smart sign-up error:', error.code || 'Unknown error');
+        
+        if (error.code === 'auth/weak-password') {
+            const friendlyError = new Error('Password should be at least 6 characters.');
+            friendlyError.code = 'auth/weak-password';
+            throw friendlyError;
+        } else if (error.code === 'auth/invalid-email') {
+            const friendlyError = new Error('Invalid email address.');
+            friendlyError.code = 'auth/invalid-email';
+            throw friendlyError;
+        }
+        
+        // Re-throw custom errors
+        if (error.code === 'auth/existing-account' || error.code === 'auth/existing-provider') {
+            throw error;
         }
         
         throw error;

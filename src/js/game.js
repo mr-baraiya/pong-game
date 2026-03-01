@@ -9,11 +9,14 @@ import {
     signInWithGoogle, 
     signInWithGithub,
     signUpWithEmail,
+    smartSignUpWithEmail,
     signInWithEmail,
     resetPassword,
     signOutUser, 
     onAuthStateChange, 
-    getCurrentUser 
+    getCurrentUser,
+    linkProvider,
+    getLinkedProviders
 } from '../config/firebase.js';
 
 // Import Audio Manager
@@ -376,7 +379,7 @@ class YuddhaPong {
         const content = overlay.querySelector('.overlay-content');
         
         const signInForm = mode === 'signin' ? `
-            <h2 class="text-warning mb-3">🔑 Sign In</h2>
+            <h2 class="text-warning mb-3"><i data-lucide="user"></i> Sign In</h2>
             <p class="text-light mb-3">Sign in to save your high scores</p>
             
             <!-- Social Sign-In -->
@@ -425,6 +428,18 @@ class YuddhaPong {
             <h2 class="text-warning mb-3">🎮 Create Account</h2>
             <p class="text-light mb-3">Join the Battle Pong arena!</p>
             
+            <!-- Social Sign-Up -->
+            <div class="d-grid gap-2 mb-3">
+                <button id="googleSignInBtn" class="btn btn-outline-warning">
+                    <i data-lucide="chrome"></i> Continue with Google
+                </button>
+                <button id="githubSignInBtn" class="btn btn-outline-warning">
+                    <i data-lucide="github"></i> Continue with GitHub
+                </button>
+            </div>
+            
+            <div class="text-center text-warning my-3">OR</div>
+            
             <div class="mb-3">
                 <input type="text" id="displayNameInput" class="form-control bg-dark text-warning border-warning" 
                        placeholder="Display Name" required>
@@ -451,6 +466,42 @@ class YuddhaPong {
             
             <div class="text-center mt-3">
                 <button id="closeAuthModal" class="btn btn-sm btn-outline-warning">Continue as Guest</button>
+            </div>
+        ` : mode === 'profile' ? `
+            <h2 class="text-warning mb-3"><i data-lucide="settings"></i> Profile Settings</h2>
+            <p class="text-light mb-3">Manage your account and linked login methods</p>
+            
+            <div class="card bg-dark border-warning mb-3">
+                <div class="card-body">
+                    <h5 class="text-warning">Account Information</h5>
+                    <div id="userInfo" class="text-light">
+                        <!-- User info will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card bg-dark border-warning mb-3">
+                <div class="card-body">
+                    <h5 class="text-warning">Linked Login Methods</h5>
+                    <div id="linkedProviders" class="mb-3">
+                        <!-- Linked providers will be populated here -->
+                    </div>
+                    
+                    <h6 class="text-warning mt-3 mb-2">Add Login Method</h6>
+                    <div class="d-grid gap-2">
+                        <button id="linkGoogleBtn" class="btn btn-outline-warning btn-sm">
+                            <i data-lucide="chrome"></i> Link Google
+                        </button>
+                        <button id="linkGithubBtn" class="btn btn-outline-warning btn-sm">
+                            <i data-lucide="github"></i> Link GitHub
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button id="signOutBtn" class="btn btn-danger btn-sm me-2">Sign Out</button>
+                <button id="closeProfileModal" class="btn btn-outline-warning btn-sm">Close</button>
             </div>
         ` : `
             <h2 class="text-warning mb-3">🔑 Reset Password</h2>
@@ -487,12 +538,20 @@ class YuddhaPong {
             this.setupSignUpListeners();
         } else if (mode === 'reset') {
             this.setupResetPasswordListeners();
+        } else if (mode === 'profile') {
+            this.setupProfileListeners();
+            this.populateProfileInfo();
         }
         
         // Close modal listener
         const closeBtn = document.getElementById('closeAuthModal');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.hideOverlay());
+        }
+        
+        const closeProfileBtn = document.getElementById('closeProfileModal');
+        if (closeProfileBtn) {
+            closeProfileBtn.addEventListener('click', () => this.hideOverlay());
         }
     }
     
@@ -580,9 +639,13 @@ class YuddhaPong {
                 }
                 
                 try {
-                    const result = await signUpWithEmail(email, password, displayName);
+                    const { result, wasExistingUser } = await smartSignUpWithEmail(email, password, displayName);
                     this.hideOverlay();
-                    this.addBattleLog(`Welcome to Battle Pong, ${displayName}!`);
+                    if (wasExistingUser) {
+                        this.addBattleLog(`Welcome back, ${result.user.displayName || result.user.email}!`);
+                    } else {
+                        this.addBattleLog(`Welcome to Battle Pong, ${displayName}!`);
+                    }
                 } catch (error) {
                     this.handleAuthError(error);
                 }
@@ -647,6 +710,124 @@ class YuddhaPong {
         });
     }
     
+    setupProfileListeners() {
+        // Provider linking buttons
+        const linkGoogleBtn = document.getElementById('linkGoogleBtn');
+        if (linkGoogleBtn) {
+            linkGoogleBtn.addEventListener('click', async () => {
+                try {
+                    await linkProvider('google');
+                    this.addBattleLog('Google account linked successfully!');
+                    this.populateProfileInfo(); // Refresh the UI
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        const linkGithubBtn = document.getElementById('linkGithubBtn');
+        if (linkGithubBtn) {
+            linkGithubBtn.addEventListener('click', async () => {
+                try {
+                    await linkProvider('github');
+                    this.addBattleLog('GitHub account linked successfully!');
+                    this.populateProfileInfo();
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+        
+        // Sign out button
+        const signOutBtn = document.getElementById('signOutBtn');
+        if (signOutBtn) {
+            signOutBtn.addEventListener('click', async () => {
+                try {
+                    await signOutUser();
+                    this.hideOverlay();
+                    this.currentUser = null;
+                    this.addBattleLog('Signed out successfully');
+                } catch (error) {
+                    this.handleAuthError(error);
+                }
+            });
+        }
+    }
+    
+    populateProfileInfo() {
+        const user = getCurrentUser();
+        if (!user) return;
+        
+        const userInfo = document.getElementById('userInfo');
+        const linkedProviders = document.getElementById('linkedProviders');
+        
+        if (userInfo) {
+            userInfo.innerHTML = `
+                <p><strong>Display Name:</strong> ${user.displayName || 'Not set'}</p>
+                <p><strong>Email:</strong> ${user.email || 'Not available'}</p>
+                <p><strong>Account Created:</strong> ${new Date(user.metadata.creationTime).toLocaleDateString()}</p>
+                <p><strong>Last Sign In:</strong> ${new Date(user.metadata.lastSignInTime).toLocaleDateString()}</p>
+            `;
+        }
+        
+        if (linkedProviders) {
+            const linkedProviderIds = getLinkedProviders();
+            const providerNames = {
+                'google.com': 'Google',
+                'github.com': 'GitHub',
+                'password': 'Email/Password'
+            };
+            
+            if (linkedProviderIds.length > 0) {
+                linkedProviders.innerHTML = `
+                    <div class="d-flex flex-wrap gap-2">
+                        ${linkedProviderIds.map(providerId => 
+                            `<span class="badge bg-warning text-dark">
+                                <i data-lucide="${this.getProviderIcon(providerId)}"></i> 
+                                ${providerNames[providerId] || providerId}
+                            </span>`
+                        ).join('')}
+                    </div>
+                `;
+            } else {
+                linkedProviders.innerHTML = '<p class="text-light small">No linked accounts</p>';
+            }
+            
+            // Hide buttons for already linked providers
+            linkedProviderIds.forEach(providerId => {
+                const btnMap = {
+                    'google.com': 'linkGoogleBtn',
+                    'github.com': 'linkGithubBtn'
+                };
+                
+                const btnId = btnMap[providerId];
+                if (btnId) {
+                    const btn = document.getElementById(btnId);
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = btn.textContent.replace('Link', 'Linked');
+                        btn.classList.remove('btn-outline-warning');
+                        btn.classList.add('btn-success');
+                    }
+                }
+            });
+            
+            // Reinitialize icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    }
+    
+    getProviderIcon(providerId) {
+        const iconMap = {
+            'google.com': 'chrome',
+            'github.com': 'github',
+            'password': 'mail'
+        };
+        return iconMap[providerId] || 'user';
+    }
+    
     handleAuthError(error) {
         // Log simplified message for expected configuration issues
         if (error.code === 'auth/not-configured' || error.code === 'auth/cancelled') {
@@ -705,6 +886,14 @@ class YuddhaPong {
             this.addBattleLog('Invalid email address.');
         } else if (error.code === 'auth/account-exists') {
             this.addBattleLog('Account exists with different provider.');
+        } else if (error.code === 'auth/existing-account') {
+            this.addBattleLog('Account exists. Try signing in or reset password.');
+        } else if (error.code === 'auth/existing-provider') {
+            this.addBattleLog(`Account exists. ${error.message}`);
+        } else if (error.code === 'auth/already-linked') {
+            this.addBattleLog('This account is already linked.');
+        } else if (error.code === 'auth/already-used') {
+            this.addBattleLog('This account is already associated with another user.');
         } else {
             this.addBattleLog('Authentication failed. Please try again.');
         }
@@ -810,6 +999,31 @@ class YuddhaPong {
                 userPhoto.style.display = 'block';
             }
             
+            // Set up profile and logout button listeners
+            const viewProfileBtn = document.getElementById('viewProfileBtn');
+            if (viewProfileBtn) {
+                viewProfileBtn.replaceWith(viewProfileBtn.cloneNode(true)); // Remove old listeners
+                document.getElementById('viewProfileBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showAuthModal('profile');
+                });
+            }
+            
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.replaceWith(logoutBtn.cloneNode(true)); // Remove old listeners  
+                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        await signOutUser();
+                        this.currentUser = null;
+                        this.addBattleLog('Signed out successfully');
+                    } catch (error) {
+                        this.handleAuthError(error);
+                    }
+                });
+            }
+            
             // Auto-fill player name if needed
             this.playerName = user.displayName || '';
         } else {
@@ -818,29 +1032,6 @@ class YuddhaPong {
             userInfo.classList.add('d-none');
             this.playerName = '';
         }
-    }
-    
-    showUserProfile() {
-        if (!this.currentUser) return;
-        
-        const overlay = document.getElementById('gameOverlay');
-        const content = overlay.querySelector('.overlay-content');
-        
-        content.innerHTML = `
-            <h2 class="text-warning mb-3">👤 User Profile</h2>
-            <div class="text-center mb-3">
-                ${this.currentUser.photoURL ? `<img src="${this.currentUser.photoURL}" alt="Profile" class="rounded-circle mb-2" style="width: 80px; height: 80px; border: 3px solid var(--war-gold);">` : ''}
-                <h4 class="text-light">${this.currentUser.displayName || 'User'}</h4>
-                <p class="text-warning">${this.currentUser.email || ''}</p>
-            </div>
-            <button id="closeProfile" class="btn btn-warning mt-3">Close</button>
-        `;
-        
-        overlay.style.display = 'block';
-        
-        document.getElementById('closeProfile').addEventListener('click', () => {
-            this.hideOverlay();
-        });
     }
     
     setupMobileControls() {
